@@ -84,7 +84,12 @@ class User(object):
         disp("couldn't reach from user {} to user {}, no link cost".format(self.id, self.dst.id))
         return 0
 
-    def UpdateRouteDikstra(self):
+    def UpdateRouteDikstra(self, min_path={}):
+        
+        for link in self.links:
+            for user in link.users:
+                if user.id in min_path:
+                    min_path[user.id] = min()
         pass
 
     def UpdateRouteBellmanFord(self):
@@ -192,14 +197,8 @@ class Link(object):
         if self.load > self.cap:
             self.cost += (self.load/self.cap-1)**2
 
-        # for user in self.users.values():
-        #     self.cost += self.Penalty(user.rate)
-        # if self.load <= self.cap:
-        #     self.cost = 0
-        # else:
-        #     self.cost += (self.load/self.cap-1)**2
 
-    def Penalty(self, x): # TODO what is the penalty function?
+    def Penalty(self, x):
         return x
 
 
