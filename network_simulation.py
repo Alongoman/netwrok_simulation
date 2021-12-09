@@ -352,7 +352,7 @@ class NetworkModel(object):
         print("timed out after {} iterations".format(iterations))
 
 
-    def UpdateRouteDikstra(self, user):
+    def UpdateRouteDijkstra(self, user):
         node_and_cost = {}
         nodes = [user]
         for u in self.users.values():
@@ -591,5 +591,5 @@ if __name__ == "__main__":
     plt.show()
 
     net_web = GenerateWebModel(capacity=1)
-    path = net_web.UpdateRouteDikstra2(net_web.users['a'])
+    path = net_web.UpdateRouteDijkstra(net_web.users['a'])
     print(path)
