@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 '''############## Globals ###############'''
-inf = 10*8
-print_info = False
+inf = 10**3
+print_info = True
 alpha = 2
 L = 5
 max_plot_rate = 5 # will not save rates higher that that to the net plot
@@ -26,6 +26,7 @@ class User(object):
         self.dst = dst
         self.cost = 0 # cost to reach destination
         self.lagrange = 0 # lagrange multiplier along route to destination
+        self.dst_links = {}
         self.links = {}
         for link in links:
             self.Connect(link)
@@ -66,6 +67,16 @@ class User(object):
         self.links.remove(link.id)
         link.DelUser(self)
 
+    def AddDstLink(self, link):
+        self.dst_links[link.id] = link
+
+    def DelDstLink(self, link):
+        try:
+            self.dst_links.pop(link.id)
+        except KeyError:
+            print("no such link id {} to remove".format(link.id))
+            return
+
     def GetRouteCost(self):
         if not self.links or self.dst is None:
             disp("user {} has no links/dst, no cost".format(self.id))
@@ -84,16 +95,7 @@ class User(object):
         disp("couldn't reach from user {} to user {}, no link cost".format(self.id, self.dst.id))
         return 0
 
-    def UpdateRouteDikstra(self, min_path={}):
-        
-        for link in self.links:
-            for user in link.users:
-                if user.id in min_path:
-                    min_path[user.id] = min()
-        pass
 
-    def UpdateRouteBellmanFord(self):
-        pass
 
     def GetRouteLagrange(self):
         if not self.links or self.dst is None:
@@ -180,7 +182,7 @@ class Link(object):
 
     def DelDstUser(self, user):
         try:
-            self.users.pop(user.id)
+            self.dst_users.pop(user.id)
         except KeyError:
             print("no such user id {} to remove".format(user.id))
             return
@@ -349,6 +351,44 @@ class NetworkModel(object):
                 return
         print("timed out after {} iterations".format(iterations))
 
+
+    def UpdateRouteDikstra(self, user):
+        node_and_cost = {}
+        nodes = [user]
+        for u in self.users.values():
+            node_and_cost[u.id] = (inf,-1)
+        node_and_cost[user.id] = (0,user.id)
+
+        while len(nodes) < len(list(self.users.keys())):
+            curr_n = nodes[-1]
+            cost = inf
+            next_link = None
+            for l in curr_n.dst_links.values():
+                for u in l.dst_users:
+                    if node_and_cost[u][0] > l.cost + node_and_cost[curr_n.id][0]:
+                        node_and_cost[u] = (l.cost + node_and_cost[curr_n.id][0], curr_n.id)
+                tmp_l_dst = l.dst_users.copy()
+                tmp_l_dst.pop(curr_n.id)
+                tmp_l_dst = set(tmp_l_dst.values())
+                if (cost > l.cost) and (tmp_l_dst.isdisjoint(nodes)):
+                    cost = l.cost
+                    next_link = l
+
+            next_n_dict = next_link.dst_users.copy()
+            next_n_dict.pop(curr_n.id)
+            next_n = list(next_n_dict.values())[0]
+            nodes.append(next_n)
+            disp([x.id for x in nodes])
+
+        return node_and_cost
+
+    def UpdateRouteBellmanFord(self):
+        node_and_cost = {}
+
+
+        return node_and_cost
+
+
     def PlotRates(self, title=""):
         alpha_str = str(alpha)
         if alpha == inf :
@@ -436,8 +476,6 @@ def GenerateWebModel(capacity=1):
     net = NetworkModel("web model (from class)")
     print("building model named '{}'".format(net.name))
     print("generating {} links and {} users".format(L,U))
-    for l in range(1, L+1):
-        net.links[l] = Link(id=l, capacity=capacity)
 
     net.users['a'] = User(id='a', rate=capacity/2)
     net.users['b'] = User(id='b', rate=capacity/2)
@@ -446,18 +484,65 @@ def GenerateWebModel(capacity=1):
     net.users['e'] = User(id='e', rate=capacity/2)
     net.users['f'] = User(id='f', rate=capacity/2)
 
-    print("connecting links")
-    for l in range(1, L): # connect links
-        net.Connect(net.links[l],net.links[l+1])
+    net.users['a'].Connect(net.users['f'])
+    net.users['b'].Connect(net.users['d'])
+    net.users['c'].Connect(net.users['e'])
+    net.users['d'].Connect(net.users['c'])
+    net.users['e'].Connect(net.users['a'])
+    net.users['f'].Connect(net.users['d'])
 
-    print("connecting users")
-    for u in range(1,L+1): # connect users
-        net.Connect(net.users[u], net.users[u+1])
-        net.Connect(net.users[u], net.links[u])
-        net.links[u].AddDstUser(net.users[u+1])
-        net.Connect(net.users[0], net.links[u]) # user 0 utilize all links
-    net.Connect(net.users[0], net.users[L+1])
-    net.Connect(net.users[0], net.links[1])
+    net.links['ab'] = Link(id='ab', capacity=capacity)
+    net.links['ab'].AddDstUser(net.users['a'])
+    net.links['ab'].AddDstUser(net.users['b'])
+    net.links['ad'] = Link(id='ad', capacity=capacity)
+    net.links['ad'].AddDstUser(net.users['a'])
+    net.links['ad'].AddDstUser(net.users['d'])
+    net.links['db'] = Link(id='db', capacity=capacity)
+    net.links['db'].AddDstUser(net.users['d'])
+    net.links['db'].AddDstUser(net.users['b'])
+    net.links['bc'] = Link(id='bc', capacity=capacity)
+    net.links['bc'].AddDstUser(net.users['b'])
+    net.links['bc'].AddDstUser(net.users['c'])
+    net.links['de'] = Link(id='de', capacity=capacity)
+    net.links['de'].AddDstUser(net.users['d'])
+    net.links['de'].AddDstUser(net.users['e'])
+    net.links['be'] = Link(id='be', capacity=capacity)
+    net.links['be'].AddDstUser(net.users['b'])
+    net.links['be'].AddDstUser(net.users['e'])
+    net.links['cf'] = Link(id='cf', capacity=capacity)
+    net.links['cf'].AddDstUser(net.users['c'])
+    net.links['cf'].AddDstUser(net.users['f'])
+    net.links['ef'] = Link(id='ef', capacity=capacity)
+    net.links['ef'].AddDstUser(net.users['e'])
+    net.links['ef'].AddDstUser(net.users['f'])
+
+    net.users['a'].AddDstLink(net.links['ab'])
+    net.users['a'].AddDstLink(net.links['ad'])
+    net.users['b'].AddDstLink(net.links['ab'])
+    net.users['b'].AddDstLink(net.links['bc'])
+    net.users['b'].AddDstLink(net.links['db'])
+    net.users['b'].AddDstLink(net.links['be'])
+    net.users['c'].AddDstLink(net.links['bc'])
+    net.users['c'].AddDstLink(net.links['cf'])
+    net.users['d'].AddDstLink(net.links['ad'])
+    net.users['d'].AddDstLink(net.links['db'])
+    net.users['d'].AddDstLink(net.links['de'])
+    net.users['e'].AddDstLink(net.links['be'])
+    net.users['e'].AddDstLink(net.links['de'])
+    net.users['e'].AddDstLink(net.links['ef'])
+    net.users['f'].AddDstLink(net.links['cf'])
+    net.users['f'].AddDstLink(net.links['ef'])
+
+
+    # class example
+    net.links['ab'].cost = 3
+    net.links['ad'].cost = 2
+    net.links['db'].cost = 1
+    net.links['de'].cost = 4
+    net.links['bc'].cost = 2
+    net.links['be'].cost = 1
+    net.links['cf'].cost = 2
+    net.links['ef'].cost = 2
 
     return net
 
@@ -499,8 +584,12 @@ if __name__ == "__main__":
     threshold = 0.0001
     iterations = 10**3
 
-    Model(step=step, threshold=threshold, iterations=iterations, alp=1)
+    # Model(step=step, threshold=threshold, iterations=iterations, alp=1)
     # Model(step=step, threshold=threshold, iterations=iterations, alp=2)
     # Model(step=step*10, threshold=threshold*10, iterations=iterations, alp=inf)
 
     plt.show()
+
+    net_web = GenerateWebModel(capacity=1)
+    path = net_web.UpdateRouteDikstra2(net_web.users['a'])
+    print(path)
