@@ -419,7 +419,6 @@ class NetworkModel(object):
     def UpdateRouteBellmanFord(self, user):
         ''' find min cost and path FROM each net node TO user'''
         node_and_cost = {}
-        nodes = [user]
         curr_nodes = []
         next_nodes = []
         for u in self.users.values():
