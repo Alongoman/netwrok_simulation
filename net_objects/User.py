@@ -1,8 +1,8 @@
 '''
 Alon Goldamnn Nov 25 2021
-Computer exercise 1 - network simulation
+Computer exercise 1 - network net_objects
 '''
-from network_simulation import *
+from net_objects import *
 class User(object):
     '''
     user object with rate and link that is being used
@@ -25,14 +25,14 @@ class User(object):
         return "user {0} | transmission {0} -> {1} | rate {2} ".format(self.id, dst_id, self.rate)
 
     def Connect(self, obj):
-        from simulation.Link import Link
+        from net_objects.Link import Link
         if isinstance(obj, User):
             self.AddUser(obj)
         elif isinstance(obj, Link):
             self.AddLink(obj)
 
     def Disconnect(self, obj):
-        from simulation.Link import Link
+        from net_objects.Link import Link
         if isinstance(obj, User):
             self.DelUser(obj)
         elif isinstance(obj, Link):

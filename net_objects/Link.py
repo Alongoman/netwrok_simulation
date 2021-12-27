@@ -1,9 +1,9 @@
 '''
 Alon Goldamnn Nov 25 2021
-Computer exercise 1 - network simulation
+Computer exercise 1 - network net_objects
 '''
 
-from network_simulation import *
+from net_objects import *
 
 class Link(object):
     '''
@@ -34,14 +34,14 @@ class Link(object):
         return "link {0} | topology {1} <- {0} -> {2} | load: {3}% | total {4} users".format(self.id, src_id, dst_id, round(100*self.load/self.cap,2), len(self.users))
 
     def Connect(self,obj):
-        from simulation.User import User
+        from net_objects.User import User
         if isinstance(obj, User):
             self.AddUser(obj)
         elif isinstance(obj, Link):
             self.AddLink(obj)
 
     def Disconnect(self, obj):
-        from simulation.User import User
+        from net_objects.User import User
         if isinstance(obj, User):
             self.DelUser(obj)
         elif isinstance(obj, Link):

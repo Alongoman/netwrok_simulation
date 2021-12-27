@@ -1,12 +1,12 @@
 '''
 Alon Goldamnn Nov 25 2021
-Computer exercise 1 - network simulation
+Computer exercise 1 - network net_objects
 '''
 
 import random
-from simulation.User import User
-from simulation.Link import Link
-from network_simulation import *
+from net_objects.User import User
+from net_objects.Link import Link
+from net_objects import *
 import numpy as np
 
 class NetworkModel(object):
@@ -177,7 +177,7 @@ class NetworkModel(object):
 
 
     def UpdateRouteDijkstra(self, user):
-        ''' find min cost and path TO each simulation node FROM user'''
+        ''' find min cost and path TO each net_objects node FROM user'''
         node_and_cost = {}
         nodes = [user]
         for u in self.users.values():
@@ -212,7 +212,7 @@ class NetworkModel(object):
         return node_and_cost
 
     def UpdateRouteBellmanFord(self, user):
-        ''' find min cost and path FROM each simulation node TO user'''
+        ''' find min cost and path FROM each net_objects node TO user'''
         node_and_cost = {}
         curr_nodes = []
         next_nodes = []

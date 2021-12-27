@@ -1,6 +1,6 @@
 '''
 Alon Goldamnn Nov 25 2021
-Computer exercise 1 - network simulation
+Computer exercise 1 - network net_objects
 '''
 
 import matplotlib.pyplot as plt
@@ -23,9 +23,9 @@ def GenerateSerialModel(L, capacity=1, alpha=1):
     '''
     total L link and L+1 sources, first source transmit to last source and each other source transmit to next source
     '''
-    from simulation.Net import NetworkModel
-    from simulation.Link import Link
-    from simulation.User import User
+    from net_objects.Net import NetworkModel
+    from net_objects.Link import Link
+    from net_objects.User import User
 
     net = NetworkModel(name="serial model (from class)", alpha=alpha)
     print("building model named '{}'".format(net.name))
@@ -55,9 +55,9 @@ def GenerateWebModel(capacity=1, alpha=1):
     '''
     web model like what was given in the lecture
     '''
-    from simulation.Net import NetworkModel
-    from simulation.Link import Link
-    from simulation.User import User
+    from net_objects.Net import NetworkModel
+    from net_objects.Link import Link
+    from net_objects.User import User
 
     L = 8
     U = 6
@@ -154,46 +154,46 @@ def DoAlgorithm(net, name, step=0.01, threshold=0.001, iterations=10**3):
     net.PlotRates(f"algorithm: {name}")
 
 #
-# def DoPrimal(simulation, step=0.01, threshold=0.001, iterations=10**3):
-#     simulation.UpdateRatesPrimaly(step=step, threshold=threshold, iterations=iterations)
+# def DoPrimal(net_objects, step=0.01, threshold=0.001, iterations=10**3):
+#     net_objects.UpdateRatesPrimaly(step=step, threshold=threshold, iterations=iterations)
 #     print("################")
 #     print("rates are:")
-#     for user in simulation.users.values():
+#     for user in net_objects.users.values():
 #         print(user)
 #     print("new network")
-#     simulation.Show()
-#     simulation.PlotRates("algorithm: primal")
+#     net_objects.Show()
+#     net_objects.PlotRates("algorithm: primal")
 #
-# def DoDual(simulation, step=0.01, threshold=0.001, iterations=10**3):
-#     simulation.UpdateRatesDual(step=step, threshold=threshold, iterations=iterations)
+# def DoDual(net_objects, step=0.01, threshold=0.001, iterations=10**3):
+#     net_objects.UpdateRatesDual(step=step, threshold=threshold, iterations=iterations)
 #     print("################")
 #     print("rates are:")
-#     for user in simulation.users.values():
+#     for user in net_objects.users.values():
 #         print(user)
 #     print("new network")
-#     simulation.Show()
-#     simulation.PlotRates("algorithm: dual")
+#     net_objects.Show()
+#     net_objects.PlotRates("algorithm: dual")
 #
-# def DoDijkstra(simulation, step=0.01, threshold=0.001, iterations=10**3):
-#     simulation.UpdateRouteDijkstra(step=step, threshold=threshold, iterations=iterations)
+# def DoDijkstra(net_objects, step=0.01, threshold=0.001, iterations=10**3):
+#     net_objects.UpdateRouteDijkstra(step=step, threshold=threshold, iterations=iterations)
 #     print("################")
 #     print("rates are:")
-#     for user in simulation.users.values():
+#     for user in net_objects.users.values():
 #         print(user)
 #     print("new network")
-#     simulation.Show()
-#     simulation.PlotRates("algorithm: dual")
+#     net_objects.Show()
+#     net_objects.PlotRates("algorithm: dual")
 #
 #
-# def DoBellmanFord(simulation, step=0.01, threshold=0.001, iterations=10**3):
-#     simulation.UpdateRouteBellmanFord(step=step, threshold=threshold, iterations=iterations)
+# def DoBellmanFord(net_objects, step=0.01, threshold=0.001, iterations=10**3):
+#     net_objects.UpdateRouteBellmanFord(step=step, threshold=threshold, iterations=iterations)
 #     print("################")
 #     print("rates are:")
-#     for user in simulation.users.values():
+#     for user in net_objects.users.values():
 #         print(user)
 #     print("new network")
-#     simulation.Show()
-#     simulation.PlotRates("algorithm: dual")
+#     net_objects.Show()
+#     net_objects.PlotRates("algorithm: dual")
 
 def Model_Serial(step, threshold, iterations, alpha=1):
     net_p = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
@@ -226,7 +226,7 @@ class GLOB(IntFlag):
     print_info = True
     L = 5
     find_short_path = False
-    max_plot_rate = 5 # will not save rates higher that that to the simulation plot
+    max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
 
 
 if __name__ == "__main__":
