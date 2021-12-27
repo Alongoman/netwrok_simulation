@@ -3,7 +3,7 @@ Alon Goldamnn Nov 25 2021
 Computer exercise 1 - network net_objects
 '''
 
-from net_objects import *
+from simulation import *
 
 class Link(object):
     '''
@@ -89,10 +89,14 @@ class Link(object):
         self.cost = 0
         for user in self.users.values():
             self.cost += self.Penalty(user.rate)
-        if self.load > self.cap:
-            self.cost += (self.load/self.cap-1)**2
+        # if self.load > self.cap:
+        #     self.cost += ((self.load/self.cap)-1)**2
 
 
     def Penalty(self, x):
-        return x
+        if self.load > self.cap:
+            return x*(((self.load/self.cap)-1)**4)
+        if x < 0.01:
+            return 100
+        return 1/x
 

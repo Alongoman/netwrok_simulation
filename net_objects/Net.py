@@ -6,7 +6,7 @@ Computer exercise 1 - network net_objects
 import random
 from net_objects.User import User
 from net_objects.Link import Link
-from net_objects import *
+from simulation import *
 import numpy as np
 
 class NetworkModel(object):
@@ -15,6 +15,7 @@ class NetworkModel(object):
     '''
     def __init__(self, name, alpha=1, links={}, users={}):
         self.name = name
+        self.model_name = ""
         self.alpha = alpha
         self.links = {}
         self.users = {}
@@ -82,10 +83,10 @@ class NetworkModel(object):
             self.plot_rates.append([0]*len(self.users))
         for user in self.users.values():
             x = user.rate
-            self.rates[iter][user.id] = x
+            self.rates[iter][user.num] = x
             if x>GLOB.max_plot_rate:
                 x = 0
-            self.plot_rates[iter][user.id] = x
+            self.plot_rates[iter][user.num] = x
 
 
     def IteratePrimaly(self, step, iter):
@@ -95,8 +96,9 @@ class NetworkModel(object):
             user = random.choice(list(self.users.values()))
         x = user.rate
         disp("user {} rate {}".format(user.id, x))
-        if GLOB.find_short_path:
-            disp(f"finding 'shortest' path first, algorithm: {GLOB.find_short_path}")
+        if self.find_short_path:
+            self.model_name = f"Primal-{self.find_short_path}"
+            disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
             self.UpdatePath(user)
 
         x_t = x + (step*(self.utility_tag(x) - user.GetRouteCost()))
@@ -110,6 +112,7 @@ class NetworkModel(object):
 
     def UpdateRatesPrimaly(self, step=0.01, threshold=0.01, iterations=500, iter_thresh=20):
         ''' iterate until grad descent convergence or until timeout'''
+        self.model_name = "Primal"
         count = 0
         self.UpdateRates(iter=0)
         self.UpdateLinksLoad()
@@ -134,8 +137,9 @@ class NetworkModel(object):
         while user.dst is None:
             user = random.choice(list(self.users.values()))
         disp("user {} rate {}".format(user.id, user.rate))
-        if GLOB.find_short_path:
-            disp(f"finding 'shortest' path first, algorithm: {GLOB.find_short_path}")
+        if self.find_short_path:
+            self.model_name = f"Dual-{self.find_short_path}"
+            disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
             self.UpdatePath(user)
 
         x_t = self.inv_utility_tag(user.GetRouteLagrange())
@@ -158,6 +162,7 @@ class NetworkModel(object):
 
     def UpdateRatesDual(self, step=0.01, threshold=0.01, iterations=500, iter_thresh=20):
         ''' iterate until grad descent convergence or until timeout'''
+        self.model_name = "Primal"
         count = 0
         self.UpdateRates(iter=0)
         self.UpdateLinksLoad()
@@ -181,34 +186,39 @@ class NetworkModel(object):
         node_and_cost = {}
         nodes = [user]
         for u in self.users.values():
-            wij = (GLOB.inf,-1)
-            neighboor_link = user.GetLink(u)
-            if neighboor_link:
-                wij = (neighboor_link.cost, user.id)
+            wij = (GLOB.inf,-1, None)
+            neighbor_link = user.GetLink(u)
+            if neighbor_link:
+                wij = (neighbor_link.cost, user.id, neighbor_link.id)
             node_and_cost[u.id] = wij
-        node_and_cost[user.id] = (0,user.id)
+        node_and_cost[user.id] = (0,user.id,None)
+        i=0
 
         while len(nodes) < len(list(self.users.keys())):
+            i+=1
             curr_n = nodes[-1]
             cost = GLOB.inf
             next_link = None
             for l in curr_n.local_links.values():
                 for u in l.local_users:
                     if node_and_cost[u][0] > l.cost + node_and_cost[curr_n.id][0]:
-                        node_and_cost[u] = (l.cost + node_and_cost[curr_n.id][0], curr_n.id)
+                        node_and_cost[u] = (l.cost + node_and_cost[curr_n.id][0], curr_n.id, l.id)
                 tmp_l_dst = l.local_users.copy()
                 tmp_l_dst.pop(curr_n.id)
                 tmp_l_dst = set(tmp_l_dst.values())
                 if (cost > l.cost) and (tmp_l_dst.isdisjoint(nodes)):
                     cost = l.cost
                     next_link = l
-
-            next_n_dict = next_link.local_users.copy()
-            next_n_dict.pop(curr_n.id)
-            next_n = list(next_n_dict.values())[0]
+            if next_link is None:
+                for u in self.users.values():
+                    if u not in nodes:
+                        next_n = u
+            else:
+                next_n_dict = next_link.local_users.copy()
+                next_n_dict.pop(curr_n.id)
+                next_n = list(next_n_dict.values())[0]
             nodes.append(next_n)
             disp([x.id for x in nodes])
-
         return node_and_cost
 
     def UpdateRouteBellmanFord(self, user):
@@ -217,23 +227,23 @@ class NetworkModel(object):
         curr_nodes = []
         next_nodes = []
         for u in self.users.values():
-            wij = (GLOB.inf,-1)
-            neighboor_link = user.GetLink(u)
-            if neighboor_link:
-                wij = (neighboor_link.cost, user.id)
+            wij = (GLOB.inf, -1, None)
+            neighbor_link = user.GetLink(u)
+            if neighbor_link:
+                wij = (neighbor_link.cost, user.id, neighbor_link.id)
                 curr_nodes.append(u)
             node_and_cost[u.id] = wij
-        node_and_cost[user.id] = (0, user.id)
+        node_and_cost[user.id] = (0, user.id, None)
 
         t = 1
-        while t>0:
+        while t > 0:
             t = 0 # stop condition
             for u in curr_nodes:
                 for n in self.neigboors[u.id].values():
                     l = u.GetLink(n)
                     c = node_and_cost[u.id][0] + l.cost
                     if c < node_and_cost[n.id][0]:
-                        node_and_cost[n.id] = (c, u.id)
+                        node_and_cost[n.id] = (c, u.id, l.id)
                         t += 1
                         next_nodes.append(n)
             curr_nodes = next_nodes.copy()
@@ -241,15 +251,27 @@ class NetworkModel(object):
 
         return node_and_cost
 
-    def UpdatePath(self, user, type):
-        ''' update shortest path - dijkstra / bellmanford'''
+    def UpdatePath(self, user, type=None):
+        ''' update shortest path - dijkstra / bellman-ford'''
+        if type is None:
+            type = self.find_short_path
         dst = user.dst
         if type == "Dijkstra":
             node_and_cost = self.UpdateRouteDijkstra(user)
-
+            self.UpdatePathFromTo(user, dst, node_and_cost)
         elif type == "BellmanFord":
-            node_and_cost = self.UpdateRouteBellmanFord(user)
+            node_and_cost = self.UpdateRouteBellmanFord(dst)
+            self.UpdatePathFromTo(dst, user, node_and_cost)
 
+    def UpdatePathFromTo(self, user, dst, node_and_cost):
+        user.ClearLinks()
+        u_id = node_and_cost[dst.id][1]
+        link = node_and_cost[dst.id][2]
+        user.Connect(self.links[link])
+        while u_id != user.id:
+            link = node_and_cost[u_id][2]
+            user.Connect(self.links[link])
+            u_id = node_and_cost[u_id][1]
 
     def utility(self, x):
         if self.alpha == 1:
@@ -284,8 +306,8 @@ class NetworkModel(object):
         plt.plot(self.plot_rates)
         plt.ylabel("Rate")
         plt.xlabel("Iterations")
-        plt.title("L = {} alpha = {}".format(GLOB.L, alpha_str))
-        plt.suptitle(title)
-        plt.legend(["user {}".format(i) for i in range(len(self.plot_rates[0]))])
+        plt.title(f"Links={len(self.links)}, users={len(self.users)}, alpha={alpha_str}")
+        plt.suptitle(self.model_name)
+        plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
 

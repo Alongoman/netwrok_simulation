@@ -2,13 +2,16 @@
 Alon Goldamnn Nov 25 2021
 Computer exercise 1 - network net_objects
 '''
-from net_objects import *
+from simulation import *
 class User(object):
     '''
     user object with rate and link that is being used
     '''
-    def __init__(self, id, rate=0, dst=None, links={}):
+    def __init__(self, id, num=None, rate=0, dst=None, links={}):
         self.id = id
+        if num is None:
+            num = int(id)
+        self.num = num
         self.rate = rate
         self.dst = dst
         self.cost = 0 # cost to reach destination
@@ -47,6 +50,9 @@ class User(object):
         except KeyError:
             print(f'No such user: "{user.id}"')
 
+    def ClearLinks(self):
+        for link in self.links:
+            self.Disconnect(link)
 
     def AddLink(self, link):
         ''' links user is using to transmit with'''

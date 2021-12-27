@@ -33,8 +33,8 @@ def GenerateSerialModel(L, capacity=1, alpha=1):
     net.users[0] = User(id=0, rate=capacity/2)
     for l in range(1, L+1):
         net.links[l] = Link(id=l, capacity=capacity)
-        net.users[l] = User(id=l, rate=capacity/2)
-    net.users[L+1] = User(id=L+1,rate=0)
+        net.users[l] = User(id=l, rate=capacity/2, num=l)
+    net.users[L+1] = User(id=L+1,rate=0, num=L+1)
 
     print("connecting links")
     for l in range(1, L): # connect links
@@ -51,26 +51,25 @@ def GenerateSerialModel(L, capacity=1, alpha=1):
 
     return net
 
-def GenerateWebModel(capacity=1, alpha=1):
+def GenerateWebModel(capacity=1, rate=1, alpha=1):
     '''
     web model like what was given in the lecture
     '''
     from net_objects.Net import NetworkModel
     from net_objects.Link import Link
     from net_objects.User import User
-
     L = 8
     U = 6
     net = NetworkModel(name="web model (from class)", alpha=alpha)
     print("building model named '{}'".format(net.name))
     print("generating {} links and {} users".format(L,U))
 
-    net.users['a'] = User(id='a', rate=capacity/2)
-    net.users['b'] = User(id='b', rate=capacity/2)
-    net.users['c'] = User(id='c', rate=capacity/2)
-    net.users['d'] = User(id='d', rate=capacity/2)
-    net.users['e'] = User(id='e', rate=capacity/2)
-    net.users['f'] = User(id='f', rate=capacity/2)
+    net.users['a'] = User(id='a', rate=rate, num=0)
+    net.users['b'] = User(id='b', rate=rate, num=1)
+    net.users['c'] = User(id='c', rate=rate, num=2)
+    net.users['d'] = User(id='d', rate=rate, num=3)
+    net.users['e'] = User(id='e', rate=rate, num=4)
+    net.users['f'] = User(id='f', rate=rate, num=5)
 
     net.users['a'].Connect(net.users['f'])
     net.users['b'].Connect(net.users['d'])
@@ -141,10 +140,6 @@ def DoAlgorithm(net, name, step=0.01, threshold=0.001, iterations=10**3):
         net.UpdateRatesPrimaly(step=step, threshold=threshold, iterations=iterations)
     elif name == "Dual":
         net.UpdateRatesDual(step=step, threshold=threshold, iterations=iterations)
-    elif name == "Dijkstra":
-        net.UpdateRouteDijkstra(step=step, threshold=threshold, iterations=iterations)
-    elif name == "BellmanFord":
-        net.UpdateRouteBellmanFord(step=step, threshold=threshold, iterations=iterations)
     print("################")
     print("rates are:")
     for user in net.users.values():
@@ -153,47 +148,6 @@ def DoAlgorithm(net, name, step=0.01, threshold=0.001, iterations=10**3):
     net.Show()
     net.PlotRates(f"algorithm: {name}")
 
-#
-# def DoPrimal(net_objects, step=0.01, threshold=0.001, iterations=10**3):
-#     net_objects.UpdateRatesPrimaly(step=step, threshold=threshold, iterations=iterations)
-#     print("################")
-#     print("rates are:")
-#     for user in net_objects.users.values():
-#         print(user)
-#     print("new network")
-#     net_objects.Show()
-#     net_objects.PlotRates("algorithm: primal")
-#
-# def DoDual(net_objects, step=0.01, threshold=0.001, iterations=10**3):
-#     net_objects.UpdateRatesDual(step=step, threshold=threshold, iterations=iterations)
-#     print("################")
-#     print("rates are:")
-#     for user in net_objects.users.values():
-#         print(user)
-#     print("new network")
-#     net_objects.Show()
-#     net_objects.PlotRates("algorithm: dual")
-#
-# def DoDijkstra(net_objects, step=0.01, threshold=0.001, iterations=10**3):
-#     net_objects.UpdateRouteDijkstra(step=step, threshold=threshold, iterations=iterations)
-#     print("################")
-#     print("rates are:")
-#     for user in net_objects.users.values():
-#         print(user)
-#     print("new network")
-#     net_objects.Show()
-#     net_objects.PlotRates("algorithm: dual")
-#
-#
-# def DoBellmanFord(net_objects, step=0.01, threshold=0.001, iterations=10**3):
-#     net_objects.UpdateRouteBellmanFord(step=step, threshold=threshold, iterations=iterations)
-#     print("################")
-#     print("rates are:")
-#     for user in net_objects.users.values():
-#         print(user)
-#     print("new network")
-#     net_objects.Show()
-#     net_objects.PlotRates("algorithm: dual")
 
 def Model_Serial(step, threshold, iterations, alpha=1):
     net_p = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
@@ -206,18 +160,30 @@ def Model_Serial(step, threshold, iterations, alpha=1):
     net_p.Show()
 
 def Model_Web(step, threshold, iterations, alpha=1):
-    net_p = GenerateWebModel(capacity=1, alpha=alpha)
+    net_p = GenerateWebModel(capacity=10,rate=2, alpha=alpha)
     net_p.UpdateLinksLoad()
     net_p.find_short_path = "Dijkstra"
     net_p.Show()
-    DoAlgorithm(net_p, name="Dijkstra", step=step, threshold=threshold, iterations=iterations)
+    DoAlgorithm(net_p, name="Primal", step=step, threshold=threshold, iterations=iterations)
+
+    # net_p = GenerateWebModel(capacity=1, alpha=alpha)
+    # net_p.UpdateLinksLoad()
+    # net_p.find_short_path = "Dijkstra"
+    # net_p.Show()
+    # DoAlgorithm(net_p, name="Dual", step=step, threshold=threshold, iterations=iterations)
 
 
-    net_d = GenerateWebModel(capacity=1, alpha=alpha)
-    net_d.UpdateLinksLoad()
-    net_d.find_short_path = "BellmanFord"
-    net_d.Show()
-    DoAlgorithm(net_d, name="BellmanFord", step=step, threshold=threshold, iterations=iterations)
+    # net_d = GenerateWebModel(capacity=1, alpha=alpha)
+    # net_d.UpdateLinksLoad()
+    # net_d.find_short_path = "BellmanFord"
+    # net_d.Show()
+    # DoAlgorithm(net_d, name="Primal", step=step, threshold=threshold, iterations=iterations)
+
+    # net_d = GenerateWebModel(capacity=1, alpha=alpha)
+    # net_d.UpdateLinksLoad()
+    # net_d.find_short_path = "BellmanFord"
+    # net_d.Show()
+    # DoAlgorithm(net_d, name="Dual", step=step, threshold=threshold, iterations=iterations)
 
 '''############## Globals ###############'''
 
@@ -227,18 +193,13 @@ class GLOB(IntFlag):
     L = 5
     find_short_path = False
     max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
+    zero_th = 0.001 # x < zero_th -> x == 0
 
 
 if __name__ == "__main__":
-    step = 0.01
-    threshold = 0.0001
-    iterations = 10**3
-
-    Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=1)
-    Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=2)
-    Model_Serial(step=step*10, threshold=threshold*10, iterations=iterations, alpha=3)
-
-    plt.show()
+    step = 0.005
+    threshold = 0.001
+    iterations = 1*10**3
 
     # net_web = GenerateWebModel(capacity=1)
     #
@@ -247,3 +208,13 @@ if __name__ == "__main__":
     #
     # path = net_web.UpdateRouteBellmanFord(net_web.users['c'])
     # print(path)
+
+    # Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=1)
+    # Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=2)
+    # Model_Serial(step=step*10, threshold=threshold*10, iterations=iterations, alpha=3)
+
+    Model_Web(step=step, threshold=threshold, iterations=iterations, alpha=1)
+
+    plt.show()
+
+# TODO fix dijkstra sometimes it fails
