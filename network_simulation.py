@@ -446,9 +446,14 @@ class NetworkModel(object):
 
         return node_and_cost
 
-    def UpdatePath(self, user):
+    def UpdatePath(self, user, type):
         ''' update shortest path - dijkstra / bellmanford'''
-        pass
+        dst = user.dst
+        if type == "Dijkstra":
+            node_and_cost = self.UpdateRouteDijkstra(user)
+
+        elif type == "BellmanFord":
+            node_and_cost = self.UpdateRouteBellmanFord(user)
 
 
     def PlotRates(self, title=""):
@@ -710,8 +715,8 @@ if __name__ == "__main__":
 
     net_web = GenerateWebModel(capacity=1)
 
-    # path = net_web.UpdateRouteDijkstra(net_web.users['a'])
-    # print(path)
+    path = net_web.UpdateRouteDijkstra(net_web.users['a'])
+    print(path)
 
     path = net_web.UpdateRouteBellmanFord(net_web.users['c'])
     print(path)
