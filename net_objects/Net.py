@@ -6,7 +6,7 @@ Computer exercise 1 - network net_objects
 import random
 from net_objects.User import User
 from net_objects.Link import Link
-from simulation import *
+from home_exercise import *
 import numpy as np
 
 class NetworkModel(object):

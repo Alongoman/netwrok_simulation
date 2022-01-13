@@ -197,9 +197,9 @@ class GLOB(IntFlag):
 
 
 if __name__ == "__main__":
-    step = 0.005
+    step = 0.001
     threshold = 0.001
-    iterations = 1*10**3
+    iterations = 2*10**3
 
     # net_web = GenerateWebModel(capacity=1)
     #

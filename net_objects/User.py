@@ -2,7 +2,7 @@
 Alon Goldamnn Nov 25 2021
 Computer exercise 1 - network net_objects
 '''
-from simulation import *
+from home_exercise import *
 class User(object):
     '''
     user object with rate and link that is being used
