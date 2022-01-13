@@ -32,6 +32,9 @@ class NetworkModel(object):
     def __str__(self):
         return "network model name: '{}' with total {} links and {} users".format(self.name, len(self.links), len(self.users))
 
+    def GetNumberOfUsers(self):
+        return len(self.users)
+
     def Show(self):
         print(self)
         for link in self.links.values():
@@ -302,11 +305,13 @@ class NetworkModel(object):
         alpha_str = str(self.alpha)
         if self.alpha == GLOB.inf :
             alpha_str = "inf"
+        if not(title):
+            title = f"Links={len(self.links)}, users={len(self.users)}, alpha={alpha_str}"
         plt.figure()
         plt.plot(self.plot_rates)
         plt.ylabel("Rate")
         plt.xlabel("Iterations")
-        plt.title(f"Links={len(self.links)}, users={len(self.users)}, alpha={alpha_str}")
+        plt.title(title)
         plt.suptitle(self.model_name)
         plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
