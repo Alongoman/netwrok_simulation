@@ -161,11 +161,9 @@ def DoTSOR(net, step=0.01, threshold=0.001, iterations=10**3):
     net.PlotRates(f"TSOR - {net.GetNumberOfUsers()} nodes")
 
 
-def Model_Web(step, threshold, iterations, size=6):
+def Model(step, threshold, iterations, size=6):
     if size == 6:
         net_p = GenerateSmallWirelessModel(capacity=1,rate=1, alpha=GLOB.alpha)
-        # net_p.UpdateLinksLoad()
-        # net_p.find_short_path = "Dijkstra"
         net_p.Show()
         DoTSOR(net_p, step=step, threshold=threshold, iterations=iterations)
     if size == 60:
@@ -192,7 +190,7 @@ if __name__ == "__main__":
     threshold = 0.001
     iterations = 2*10**3
 
-    Model_Web(step=step, threshold=threshold, iterations=iterations, size=6)
+    Model(step=step, threshold=threshold, iterations=iterations, size=6)
 
 
     plt.show()

@@ -91,7 +91,6 @@ class NetworkModel(object):
                 x = 0
             self.plot_rates[iter][user.num] = x
 
-
     def IteratePrimaly(self, step, iter):
         ''' one iteration of the primal algorithm'''
         user = random.choice(list(self.users.values()))
@@ -182,7 +181,6 @@ class NetworkModel(object):
                 print("converged after {} iterations".format(i))
                 return
         print("timed out after {} iterations".format(iterations))
-
 
     def UpdateRouteDijkstra(self, user):
         ''' find min cost and path TO each net_objects node FROM user'''
