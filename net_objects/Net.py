@@ -316,5 +316,11 @@ class NetworkModel(object):
         plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
 
-    def TSOR_init(self):
-
+    def TSOR(self, user_id):
+        ''' iterate TSOR from start from user_id until no more packets to route'''
+        src = self.users[user_id]
+        dst = src.dst
+        src.TSOR0()
+        packet = Packet(src=src, dst=dst, type="", V=-GLOB.R)
+        packet.SendTo(src)
+        src.HandlePacket()

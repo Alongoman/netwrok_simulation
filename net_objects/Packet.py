@@ -2,7 +2,7 @@
 Alon Goldamnn Jan 14 2022
 network net_objects
 '''
-
+from TSOR_sim import *
 class Packet(object):
     '''
     Packet of information: ACK, NACK, LACK, LCFM
@@ -20,6 +20,7 @@ class Packet(object):
         self.TTL = TTL
         self.num = num
         self.hop = 0
+        self.cost = 0
         self.V = V
 
     def copy(self):
@@ -37,3 +38,4 @@ class Packet(object):
         self.next_hop = user
         self.TTL -= 1
         self.hop += 1
+        self.cost = GLOB.c*self.hop

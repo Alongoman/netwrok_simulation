@@ -173,7 +173,7 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
 
     return net
 
-def DoTSOR(net, step=0.01, threshold=0.001, iterations=10**3):
+def DoTSOR(net, user_id, packets=10**3):
     print("network links:")
     net.Show()
     print("################")
@@ -182,18 +182,19 @@ def DoTSOR(net, step=0.01, threshold=0.001, iterations=10**3):
         print(user)
     net.PlotRates(f"TSOR - {net.GetNumberOfUsers()} nodes")
 
+    for i in range(packets):
+        net.TSOR(user_id=user_id)
 
-def Model(step, threshold, iterations, size=6):
+
+def Model(size=6, user_id=1,packets=1):
     if size == 6:
         net_p = GenerateSmallWirelessModel(capacity=1,rate=1, alpha=GLOB.alpha)
         net_p.Show()
-        DoTSOR(net_p, step=step, threshold=threshold, iterations=iterations)
+        DoTSOR(net_p,user_id, packets=packets)
     if size == 60:
         net_p = GenerateBigWirelessModel(capacity=10,rate=1, alpha=GLOB.alpha)
-        net_p.UpdateLinksLoad()
-        net_p.find_short_path = "Dijkstra"
         net_p.Show()
-        DoTSOR(net_p, step=step, threshold=threshold, iterations=iterations)
+        DoTSOR(net_p,user_id, packets=packets)
 
 '''############## Globals ###############'''
 
@@ -210,11 +211,9 @@ class GLOB(IntFlag):
 
 
 if __name__ == "__main__":
-    step = 0.001
-    threshold = 0.001
-    iterations = 2*10**3
 
-    Model(step=step, threshold=threshold, iterations=iterations, size=6)
+    packets_num = 2*10**3
 
+    Model(size=6, user_id=1, packets=packets_num)
 
     plt.show()

@@ -144,17 +144,9 @@ class User(object):
         else:
             print(f"user {user.id} is not part of user {user.id} neighbors")
 
-    def InitV(self):
-        ''' init the distance dictionary V(n,n') '''
-        if not self.neighbors:
-            self.UpdateNeighbors()
-        for u_id, user in self.neighbors.items():
-            self.V_dict[user] = 0
-        self.V = -GLOB.R
-
-
     def HandlePacket(self):
         '''if return false then there are no more packets in buffer'''
+        disp(f"func {'HandlePacket'} | user {self.id}")
         if self.buffer_head == len(self.buffer):
             print(f"no more packets on queue of user {self.id}")
             self.buffer = []
@@ -180,9 +172,14 @@ class User(object):
             self.TSOR1(packet)
         return True
 
+    def TSOR0(self):
+        ''' TSOR init stage '''
+        self.InitS()
+        self.InitV()
+
     def TSOR1(self, packet):
         ''' handle first part of TSOR algorithm'''
-
+        disp(f"func {'TSOR1'} | user {self.id}")
         p = Packet(src=self, dst=packet.src, type="LACK", V=self.V, TTL=1)
         self.Broadcast(p)
 
@@ -200,10 +197,9 @@ class User(object):
             self.Broadcast(packet)
 
 
-
-
     def TSOR2(self, packet):
         ''' handle second part of TSOR algorithm'''
+        disp(f"func {'TSOR2'} | user {self.id}")
         p = Packet(src=self, dst=packet.src, type="LACK", V=self.V)
         p.SendTo(packet.last_hop)
         if packet.V == self.V_dict[packet.last_hop]:
@@ -220,6 +216,7 @@ class User(object):
 
     def Broadcast(self, packet, skip=None):
         ''' will send packet to all neighbors'''
+        disp(f"func {'Broadcast'} | user {self.id}")
         for u_id,u in self.neighbors.items(): # broadcast locally confirmation
             if u == skip:
                 print(f"user {self.id} not sending packet to {u_id}")
@@ -229,6 +226,7 @@ class User(object):
 
     def GetNextHop(self, V_dict={}):
         ''' find next hope base on min distance V(n) '''
+        disp(f"func {'GetNextHop'} | user {self.id}")
         if not V_dict:
             V_dict = self.V_dict
         next = ""
@@ -241,6 +239,7 @@ class User(object):
 
     def UpdateV(self):
         ''' equation number 6 in article '''
+        disp(f"func {'UpdateV'} | user {self.id}")
         V = GLOB.c
         for s,V_dict in self.S.items():
             t = self.Beta(self.a[s], self.b[s])
@@ -250,6 +249,7 @@ class User(object):
 
     def UpdateBetaParams(self, s):
         ''' equation number 5 in article '''
+        disp(f"func {'UpdateBetaParams'} | user {self.id}")
         for i in self.a:
             if i == s:
                 self.a[i] += 1
@@ -258,6 +258,7 @@ class User(object):
 
     def InitS(self):
         ''' initialize all subsets of neighbors '''
+        disp(f"func {'InitS'} | user {self.id}")
         n = list(self.neighbors.keys())
         self.S = {}
         S = get_combs(n)
@@ -268,3 +269,11 @@ class User(object):
             for char in el:
                 self.S[el][char] = self.neighbors[char]
 
+    def InitV(self):
+        ''' init the distance dictionary V(n,n') '''
+        disp(f"func {'InitV'} | user {self.id}")
+        if not self.neighbors:
+            self.UpdateNeighbors()
+        for u_id, user in self.neighbors.items():
+            self.V_dict[user] = 0
+        self.V = -GLOB.R
