@@ -3,6 +3,7 @@ Alon Goldamnn Jan 14 2022
 network net_objects
 '''
 from TSOR_sim import *
+
 class Packet(object):
     '''
     Packet of information: ACK, NACK, LACK, LCFM
@@ -28,12 +29,12 @@ class Packet(object):
         return p
 
     def __str__(self):
-        return f"{self.type}: {self.src} -> {self.dst}"
+        return f"{self.type}: {self.src.id} -> {self.dst.id}"
 
     def SendTo(self, user):
+        from net_objects.User import User
         assert isinstance(user, User)
         user.buffer.append(self)
-        user.buffer_head += 1
         self.last_hop = self.next_hop
         self.next_hop = user
         self.TTL -= 1

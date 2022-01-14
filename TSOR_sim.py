@@ -80,6 +80,8 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
     from net_objects.Net import NetworkModel
     from net_objects.Link import Link
     from net_objects.User import User
+    from net_objects.Packet import Packet
+
     L = 11
     U = 6
     net = NetworkModel(name="TSOR 6 nodes", alpha=alpha)
@@ -173,27 +175,29 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
 
     return net
 
-def DoTSOR(net, user_id, packets=10**3):
+def DoTSOR(net, user_id='1', packets=1):
     print("network links:")
     net.Show()
     print("################")
     print("rates are:")
     for user in net.users.values():
         print(user)
-    net.PlotRates(f"TSOR - {net.GetNumberOfUsers()} nodes")
+    # net.PlotRates(f"TSOR - {net.GetNumberOfUsers()} nodes")
 
     for i in range(packets):
         net.TSOR(user_id=user_id)
 
 
-def Model(size=6, user_id=1,packets=1):
+def Model(size=6, user_id='1',packets=1):
     if size == 6:
         net_p = GenerateSmallWirelessModel(capacity=1,rate=1, alpha=GLOB.alpha)
         net_p.Show()
-        DoTSOR(net_p,user_id, packets=packets)
+        net_p.MapNeighboors()
+        DoTSOR(net=net_p, user_id=user_id, packets=packets)
     if size == 60:
         net_p = GenerateBigWirelessModel(capacity=10,rate=1, alpha=GLOB.alpha)
         net_p.Show()
+        net_p.MapNeighboors()
         DoTSOR(net_p,user_id, packets=packets)
 
 '''############## Globals ###############'''
@@ -212,8 +216,8 @@ class GLOB(IntFlag):
 
 if __name__ == "__main__":
 
-    packets_num = 2*10**3
+    packets_num = 1
 
-    Model(size=6, user_id=1, packets=packets_num)
+    Model(size=6, user_id='1', packets=packets_num)
 
     plt.show()

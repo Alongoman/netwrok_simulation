@@ -68,6 +68,7 @@ class NetworkModel(object):
     def MapNeighboors(self):
         self.neigboors = {}
         for u1 in self.users.values():
+            u1.UpdateNeighbors()
             self.neigboors[u1.id] = {}
             for u2 in self.users.values():
                 link = u1.GetLink(u2)
@@ -323,4 +324,13 @@ class NetworkModel(object):
         src.TSOR0()
         packet = Packet(src=src, dst=dst, type="", V=-GLOB.R)
         packet.SendTo(src)
-        src.HandlePacket()
+        x = src.HandlePacket()
+
+        lst = [1]*len(self.users)
+        while sum(lst) > 0: # still handling packets
+            for i, u in enumerate(self.users.values()):
+                x = u.HandlePacket()
+                if x:
+                    lst[i] = 1
+                else:
+                    lst[i] = 0

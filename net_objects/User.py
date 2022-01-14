@@ -4,8 +4,10 @@ network net_objects
 '''
 from home_exercise import *
 from TSOR_sim import *
-from net_objects import Packet
 import numpy as np
+from net_objects.Packet import Packet
+
+
 class User(object):
     '''
     user object with rate and link that is being used
@@ -29,9 +31,9 @@ class User(object):
         self.a = {}
         self.b = {}
         self.buffer = []
-        self.buffer_head = -1
+        self.buffer_head = 0
         self.Beta = np.random.beta
-        self.S = self.InitS()
+        self.S = {}
 
     def __str__(self):
         dst_id = " "
@@ -147,14 +149,15 @@ class User(object):
     def HandlePacket(self):
         '''if return false then there are no more packets in buffer'''
         disp(f"func {'HandlePacket'} | user {self.id}")
-        if self.buffer_head == len(self.buffer):
+        if self.buffer_head >= len(self.buffer):
             print(f"no more packets on queue of user {self.id}")
             self.buffer = []
-            self.queue_head = -1
+            self.queue_head = 0
             return False
 
         packet = self.buffer[self.buffer_head]
-        self.buffer_head += 1
+        self.buffer_head += 1 # next in queue
+
         if packet.TTL < 0:
             return False
 
@@ -221,8 +224,9 @@ class User(object):
             if u == skip:
                 print(f"user {self.id} not sending packet to {u_id}")
                 continue
-            packet.dst = u
-            packet.SendTo(u)
+            p = packet.copy()
+            p.dst = u
+            p.SendTo(u)
 
     def GetNextHop(self, V_dict={}):
         ''' find next hope base on min distance V(n) '''
@@ -259,9 +263,12 @@ class User(object):
     def InitS(self):
         ''' initialize all subsets of neighbors '''
         disp(f"func {'InitS'} | user {self.id}")
-        n = list(self.neighbors.keys())
+        neighbors = list(self.neighbors.keys())
+        for i,n in enumerate(neighbors):
+            neighbors[i] = int(n)
+
         self.S = {}
-        S = get_combs(n)
+        S = get_combs(neighbors)
         for el in S:
             self.a[el] = 1
             self.b[el] = 1
