@@ -4,6 +4,8 @@ network net_objects
 '''
 from home_exercise import *
 from TSOR_sim import *
+from net_objects import Packet
+import numpy as np
 class User(object):
     '''
     user object with rate and link that is being used
@@ -22,11 +24,14 @@ class User(object):
         for link in links:
             self.Connect(link)
         self.neighbors = {}
-        self.V = {}
+        self.V_dict = {}
+        self.V = None
         self.a = {}
         self.b = {}
-        self.packet_queue = []
-        self.queue_head = -1
+        self.buffer = []
+        self.buffer_head = -1
+        self.Beta = np.random.beta
+        self.S = self.InitS()
 
     def __str__(self):
         dst_id = " "
@@ -107,8 +112,6 @@ class User(object):
         disp("couldn't reach from user {} to user {}, no link cost".format(self.id, self.dst.id))
         return 0
 
-
-
     def GetRouteLagrange(self):
         if not self.links or self.dst is None:
             disp("user {} has no links/dst, no lagrangians".format(self.id))
@@ -142,22 +145,126 @@ class User(object):
             print(f"user {user.id} is not part of user {user.id} neighbors")
 
     def InitV(self):
+        ''' init the distance dictionary V(n,n') '''
         if not self.neighbors:
             self.UpdateNeighbors()
         for u_id, user in self.neighbors.items():
-            self.V[u_id] = 0
-        self.V[self.id] = -GLOB.R
+            self.V_dict[user] = 0
+        self.V = -GLOB.R
 
-    def GetPacket(self):
-        if self.queue_head == len(self.packet_queue)
+
+    def HandlePacket(self):
+        '''if return false then there are no more packets in buffer'''
+        if self.buffer_head == len(self.buffer):
             print(f"no more packets on queue of user {self.id}")
-            self.packet_queue = []
+            self.buffer = []
             self.queue_head = -1
-            return None
+            return False
 
-        packet = self.packet_queue[self.queue_head]
-        self.queue_head += 1
-        packet.TTL -= 1
+        packet = self.buffer[self.buffer_head]
+        self.buffer_head += 1
+        if packet.TTL < 0:
+            return False
 
-        if packet.dst == self.id:
-            return Packet(src=self.id, dst=packet.src, type="ACK")
+        if packet.TTL == 0:
+            p = Packet(src=self,dst=packet.src,type="ACK",V=self.V)
+            if packet.dst == self:
+                self.Broadcast(p)
+            else:
+                p.type = "NACK"
+                self.Broadcast(p)
+
+        if packet.type in ["ACK","NACK"]:
+            self.TSOR2(packet)
+        else:
+            self.TSOR1(packet)
+        return True
+
+    def TSOR1(self, packet):
+        ''' handle first part of TSOR algorithm'''
+
+        p = Packet(src=self, dst=packet.src, type="LACK", V=self.V, TTL=1)
+        self.Broadcast(p)
+
+        if (packet.type == "LCFM") and (packet.last_node in self.neighbors.values()): # got LCFM from neighbor
+            if self == packet.next_hop:
+                self.Broadcast(packet)
+
+
+        if (packet.type == "LACK"):
+            self.V_dict[packet.last_hop] = min(self.V_dict[packet.last_hop], packet.V)
+            self.UpdateBetaParams()
+            packet.V = self.V
+            packet.last_hop = self
+            packet.next_hop = self.GetNextHop()
+            self.Broadcast(packet)
+
+
+
+
+    def TSOR2(self, packet):
+        ''' handle second part of TSOR algorithm'''
+        p = Packet(src=self, dst=packet.src, type="LACK", V=self.V)
+        p.SendTo(packet.last_hop)
+        if packet.V == self.V_dict[packet.last_hop]:
+            return
+
+        if self.id != GLOB.N:
+            self.V_dict[packet.last_hop] = packet.V
+            self.UpdateV()
+
+        p2 = packet.copy()
+        p2.TTL = 1
+        self.Broadcast(p2)
+
+
+    def Broadcast(self, packet, skip=None):
+        ''' will send packet to all neighbors'''
+        for u_id,u in self.neighbors.items(): # broadcast locally confirmation
+            if u == skip:
+                print(f"user {self.id} not sending packet to {u_id}")
+                continue
+            packet.dst = u
+            packet.SendTo(u)
+
+    def GetNextHop(self, V_dict={}):
+        ''' find next hope base on min distance V(n) '''
+        if not V_dict:
+            V_dict = self.V_dict
+        next = ""
+        val = GLOB.inf
+        for n,v in V_dict.items():
+            if v < val:
+                next = n
+                val = v
+        return next
+
+    def UpdateV(self):
+        ''' equation number 6 in article '''
+        V = GLOB.c
+        for s,V_dict in self.S.items():
+            t = self.Beta(self.a[s], self.b[s])
+            m_v = self.GetNextHop(V_dict)
+            V += t*m_v
+        self.V = min(0, V)
+
+    def UpdateBetaParams(self, s):
+        ''' equation number 5 in article '''
+        for i in self.a:
+            if i == s:
+                self.a[i] += 1
+            else:
+                self.b[i] += 1
+
+    def InitS(self):
+        ''' initialize all subsets of neighbors '''
+        n = list(self.neighbors.keys())
+        self.S = {}
+        S = get_combs(n)
+        for el in S:
+            self.a[el] = 1
+            self.b[el] = 1
+            self.S[el] = {}
+            for char in el:
+                self.S[el][char] = self.neighbors[char]
+

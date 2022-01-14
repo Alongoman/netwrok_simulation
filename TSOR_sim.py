@@ -13,6 +13,28 @@ def disp(info):
     if GLOB.print_info:
         print(info)
 
+def combs(xs, i=0):
+    if i==len(xs):
+        yield ()
+        return
+    for c in combs(xs,i+1):
+        yield c
+        yield c+(xs[i],)
+
+def get_combs(iters):
+    lst = list(combs(iters))
+    res = set()
+    for elem in lst:
+        s = ""
+        q = str(elem)[1:-1]
+        q = q.replace(" ","")
+        q = q.split(",")
+        for el in q:
+            s += str(el)
+        if s:
+            res.add(s)
+    return res
+
 def GetRatesDiff(rates1, rates2):
     diff = [0]*len(rates1)
     for idx,elem in enumerate(rates1):
@@ -177,6 +199,7 @@ def Model(step, threshold, iterations, size=6):
 
 class GLOB(IntFlag):
     R = 1
+    c = 1
     inf = 10**3
     alpha = 1
     print_info = True
