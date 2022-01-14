@@ -1,8 +1,9 @@
 '''
 Alon Goldamnn Nov 25 2021
-Computer exercise 1 - network net_objects
+network net_objects
 '''
 from home_exercise import *
+from TSOR_sim import *
 class User(object):
     '''
     user object with rate and link that is being used
@@ -20,6 +21,12 @@ class User(object):
         self.links = {}
         for link in links:
             self.Connect(link)
+        self.neighbors = {}
+        self.V = {}
+        self.a = {}
+        self.b = {}
+        self.packet_queue = []
+        self.queue_head = -1
 
     def __str__(self):
         dst_id = " "
@@ -120,5 +127,37 @@ class User(object):
         disp("couldn't reach from user {} to user {}, no lagrangians".format(self.id, self.dst.id))
         return 0
 
+    def UpdateNeighbors(self):
+        for l_id,link in self.local_links.items():
+            for u_id, user in link.local_users.items():
+                self.AddNeighbor(user)
 
+    def AddNeighbor(self, user):
+        self.neighbors[user.id] = user
 
+    def DelNeighbor(self, user):
+        if user.id in self.neighbors:
+            self.neighbors.pop(user.id)
+        else:
+            print(f"user {user.id} is not part of user {user.id} neighbors")
+
+    def InitV(self):
+        if not self.neighbors:
+            self.UpdateNeighbors()
+        for u_id, user in self.neighbors.items():
+            self.V[u_id] = 0
+        self.V[self.id] = -GLOB.R
+
+    def GetPacket(self):
+        if self.queue_head == len(self.packet_queue)
+            print(f"no more packets on queue of user {self.id}")
+            self.packet_queue = []
+            self.queue_head = -1
+            return None
+
+        packet = self.packet_queue[self.queue_head]
+        self.queue_head += 1
+        packet.TTL -= 1
+
+        if packet.dst == self.id:
+            return Packet(src=self.id, dst=packet.src, type="ACK")

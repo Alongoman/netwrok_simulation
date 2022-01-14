@@ -176,6 +176,7 @@ def Model(step, threshold, iterations, size=6):
 '''############## Globals ###############'''
 
 class GLOB(IntFlag):
+    R = 1
     inf = 10**3
     alpha = 1
     print_info = True

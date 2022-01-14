@@ -1,12 +1,13 @@
 '''
 Alon Goldamnn Nov 25 2021
-Computer exercise 1 - network net_objects
+network net_objects
 '''
 
 import random
 from net_objects.User import User
 from net_objects.Link import Link
 from home_exercise import *
+from TSOR_sim import *
 import numpy as np
 
 class NetworkModel(object):
@@ -313,4 +314,6 @@ class NetworkModel(object):
         plt.suptitle(self.model_name)
         plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
+
+    def TSOR_init(self):
 
