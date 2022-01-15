@@ -31,6 +31,7 @@ class User(object):
         self.a = {}
         self.b = {}
         self.buffer = []
+        self.LACK = set()
         self.buffer_head = 0
         self.Beta = np.random.beta
         self.S = {}
@@ -135,7 +136,8 @@ class User(object):
     def UpdateNeighbors(self):
         for l_id,link in self.local_links.items():
             for u_id, user in link.local_users.items():
-                self.AddNeighbor(user)
+                if user != self:
+                    self.AddNeighbor(user)
 
     def AddNeighbor(self, user):
         self.neighbors[user.id] = user
@@ -146,28 +148,53 @@ class User(object):
         else:
             print(f"user {user.id} is not part of user {user.id} neighbors")
 
-    def HandlePacket(self):
-        '''if return false then there are no more packets in buffer'''
-        disp(f"func {'HandlePacket'} | user {self.id}")
+    def RecivePacket(self, packet):
+        ''' handle inbound packet'''
+        if packet.type == "LACK":
+            self.LACK.add(packet)
+        else:
+            self.buffer.append(packet)
+
+    def HandleRecentPacket(self):
+        ''' like handle packet but from the most recent one '''
+        disp(f"func {'HandleRecentPacket'} | user {self.id}")
         if self.buffer_head >= len(self.buffer):
             print(f"no more packets on queue of user {self.id}")
             self.buffer = []
-            self.queue_head = 0
+            self.buffer_head = 0
             return False
+        packet = self.buffer.pop(-1)
+        self.HandlePacket(packet)
 
-        packet = self.buffer[self.buffer_head]
-        self.buffer_head += 1 # next in queue
+    def HandlePacket(self, packet=None):
+        '''if return false then there are no more packets in buffer'''
+        disp(f"func {'HandlePacket'} | user {self.id}")
+
+        if self.buffer_head >= len(self.buffer) and (not packet):
+            if not self.LACK:
+                disp(f"no more packets on queue of user {self.id}")
+                self.buffer = []
+                self.buffer_head = 0
+                return False
+            else:
+                disp(f"handling LACKS")
+                self.HandleLack()
+                return True
+
+        if not packet:
+            packet = self.buffer[self.buffer_head]
+            self.buffer_head += 1 # next in queue
 
         if packet.TTL < 0:
             return False
 
-        if packet.TTL == 0:
-            p = Packet(src=self,dst=packet.src,type="ACK",V=self.V)
+        if (packet.TTL == 0) and (packet.type == "LCFM"):
+            p2 = Packet(src=self, dst=packet.src, type="ACK", origin=self, V=self.V)
             if packet.dst == self:
-                self.Broadcast(p)
+                self.Broadcast(p2)
             else:
-                p.type = "NACK"
-                self.Broadcast(p)
+                p2.type = "NACK"
+                self.Broadcast(p2)
 
         if packet.type in ["ACK","NACK"]:
             self.TSOR2(packet)
@@ -183,50 +210,68 @@ class User(object):
     def TSOR1(self, packet):
         ''' handle first part of TSOR algorithm'''
         disp(f"func {'TSOR1'} | user {self.id}")
-        p = Packet(src=self, dst=packet.src, type="LACK", V=self.V, TTL=1)
-        self.Broadcast(p)
+        p_lack = self.GenLack(packet)
+        self.SendPacket(dst=p_lack.dst, packet=p_lack)
 
-        if (packet.type == "LCFM") and (packet.last_node in self.neighbors.values()): # got LCFM from neighbor
+        if (packet.type == "LCFM") and ((packet.src in self.neighbors.values()) or (packet.src == self)): # got LCFM from neighbor
             if self == packet.next_hop:
                 self.Broadcast(packet)
+                for u in self.neighbors.values():
+                    u.HandleRecentPacket()
+                if self.LACK:
+                    self.HandleLack()
+                packet.V = self.V
+                packet.next_hop = self.GetNextHop()
+                self.Broadcast(packet=packet)
 
-
-        if (packet.type == "LACK"):
-            self.V_dict[packet.last_hop] = min(self.V_dict[packet.last_hop], packet.V)
-            self.UpdateBetaParams()
-            packet.V = self.V
-            packet.last_hop = self
-            packet.next_hop = self.GetNextHop()
-            self.Broadcast(packet)
+    def HandleLack(self):
+        lst = []
+        while self.LACK:
+            packet = self.LACK.pop()
+            self.V_dict[packet.src] = min(self.V_dict[packet.src], packet.V)
+            lst.append(str(packet.src.id))
+        s = fix_str(lst)
+        self.UpdateBetaParams(s)
 
 
     def TSOR2(self, packet):
         ''' handle second part of TSOR algorithm'''
         disp(f"func {'TSOR2'} | user {self.id}")
         p = Packet(src=self, dst=packet.src, type="LACK", V=self.V)
-        p.SendTo(packet.last_hop)
-        if packet.V == self.V_dict[packet.last_hop]:
+        self.SendPacket(packet=p, dst=packet.src)
+        if packet.V == self.V_dict[packet.src]:
             return
 
         if self.id != GLOB.N:
-            self.V_dict[packet.last_hop] = packet.V
+            self.V_dict[packet.src] = packet.V
             self.UpdateV()
 
         p2 = packet.copy()
         p2.TTL = 1
         self.Broadcast(p2)
 
+    def GenLack(self, packet):
+        ''' generate locak ACK packet '''
+        p = Packet(src=self, dst=packet.src, origin=self, type="LACK", V=self.V)
+        return p
+
+    def SendPacket(self, dst, packet):
+        ''' send p through link to dst '''
+        if self != dst:
+            packet.V = self.V
+            packet.src = self
+            link = self.GetLink(dst)
+            link.Transmit(dst=dst, packet=packet)
 
     def Broadcast(self, packet, skip=None):
         ''' will send packet to all neighbors'''
         disp(f"func {'Broadcast'} | user {self.id}")
         for u_id,u in self.neighbors.items(): # broadcast locally confirmation
-            if u == skip:
-                print(f"user {self.id} not sending packet to {u_id}")
+            if u == skip or u == self:
+                disp(f"user {self.id} not sending packet to {u_id}")
                 continue
             p = packet.copy()
-            p.dst = u
-            p.SendTo(u)
+            self.SendPacket(dst=u, packet=p)
 
     def GetNextHop(self, V_dict={}):
         ''' find next hope base on min distance V(n) '''
@@ -245,10 +290,13 @@ class User(object):
         ''' equation number 6 in article '''
         disp(f"func {'UpdateV'} | user {self.id}")
         V = GLOB.c
-        for s,V_dict in self.S.items():
+        for s,u_dict in self.S.items():
+            V_dict = {}
+            for u_id,u in u_dict.items():
+                V_dict[u] = u.V
+            next = self.GetNextHop(V_dict)
             t = self.Beta(self.a[s], self.b[s])
-            m_v = self.GetNextHop(V_dict)
-            V += t*m_v
+            V += t*next.V
         self.V = min(0, V)
 
     def UpdateBetaParams(self, s):

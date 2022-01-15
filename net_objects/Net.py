@@ -72,7 +72,7 @@ class NetworkModel(object):
             self.neigboors[u1.id] = {}
             for u2 in self.users.values():
                 link = u1.GetLink(u2)
-                if link:
+                if link and u2 != u1:
                     self.neigboors[u1.id][u2.id] = u2
 
     def UpdateLinksLoad(self):
@@ -317,14 +317,16 @@ class NetworkModel(object):
         plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
 
-    def TSOR(self, user_id):
+    def TSOR(self, user_id, packet_num=0):
         ''' iterate TSOR from start from user_id until no more packets to route'''
+
+        for u_id,u in self.users.items():
+            u.TSOR0()
+
         src = self.users[user_id]
         dst = src.dst
-        src.TSOR0()
-        packet = Packet(src=src, dst=dst, type="", V=-GLOB.R)
-        packet.SendTo(src)
-        x = src.HandlePacket()
+        packet = Packet(src=src, dst=dst, next_hop=src, origin=src, type="LCFM", V=-GLOB.R, num=packet_num, TTL=10)
+        src.RecivePacket(packet)
 
         lst = [1]*len(self.users)
         while sum(lst) > 0: # still handling packets

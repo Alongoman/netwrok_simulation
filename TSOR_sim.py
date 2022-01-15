@@ -22,18 +22,25 @@ def combs(xs, i=0):
         yield c+(xs[i],)
 
 def get_combs(iters):
-    lst = list(combs(iters))
+    x = list(combs(iters))
+    lst = sorted(x)
     res = set()
     for elem in lst:
-        s = ""
-        q = str(elem)[1:-1]
-        q = q.replace(" ","")
-        q = q.split(",")
-        for el in q:
-            s += str(el)
+        s = fix_str(elem)
         if s:
             res.add(s)
     return res
+
+def fix_str(lst):
+    elem = sorted(lst)
+    s = ""
+    q = str(elem)[1:-1]
+    q = q.replace(" ","")
+    q = q.split(",")
+    for el in q:
+        s += str(el)
+    return s
+
 
 def GetRatesDiff(rates1, rates2):
     diff = [0]*len(rates1)
@@ -179,13 +186,11 @@ def DoTSOR(net, user_id='1', packets=1):
     print("network links:")
     net.Show()
     print("################")
-    print("rates are:")
+    print("nodes:")
     for user in net.users.values():
         print(user)
-    # net.PlotRates(f"TSOR - {net.GetNumberOfUsers()} nodes")
-
-    for i in range(packets):
-        net.TSOR(user_id=user_id)
+    for i in range(1, packets+1):
+        net.TSOR(user_id=user_id, packet_num=i)
 
 
 def Model(size=6, user_id='1',packets=1):
@@ -205,6 +210,7 @@ def Model(size=6, user_id='1',packets=1):
 class GLOB(IntFlag):
     R = 1
     c = 1
+    N = '6'
     inf = 10**3
     alpha = 1
     print_info = True

@@ -5,18 +5,22 @@ network net_objects
 
 from home_exercise import *
 from TSOR_sim import *
+import numpy as np
+
 
 class Link(object):
     '''
     link object with capacity and users that are using it
     '''
-    def __init__(self, id, capacity=0, src=None, dst=None, users={}):
+    def __init__(self, id, transmit_prob=1, capacity=0, src=None, dst=None, users={}):
 
         self.id = id
         self.cap = capacity
         self.load = 0
         self.local_users = {}
         self.users = {}
+        self.transmit_prob = transmit_prob
+        self.transmit_rand = np.random.binomial(1, transmit_prob)
         for user in users:
             self.Connect(user)
         self.penalty = 0
@@ -32,7 +36,7 @@ class Link(object):
             src_id = self.src.id
         if self.dst is not None:
             dst_id = self.dst.id
-        return "link {0} | topology {1} <- {0} -> {2} | load: {3}% | total {4} users".format(self.id, src_id, dst_id, round(100*self.load/self.cap,2), len(self.users))
+        return f"link {self.id} | topology {src_id} <- -> {dst_id} | transmit prob: {round(100*self.transmit_prob)}% "
 
     def Connect(self,obj):
         from net_objects.User import User
@@ -101,3 +105,13 @@ class Link(object):
             return 100
         return 1/x
 
+    def Transmit(self, dst, packet):
+        if dst.id not in self.local_users:
+            print(f"{dst.id} not in reach, dropping packet: {packet}")
+
+        if self.transmit_rand:
+            packet.Hop()
+            dst.RecivePacket(packet=packet)
+            disp(f"PASS: transmit to {dst.id} of packet {packet}")
+        else:
+            disp(f"FAIL: transmit to {dst.id} of packet {packet}")
