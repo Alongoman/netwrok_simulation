@@ -8,7 +8,7 @@ class Packet(object):
     '''
     Packet of information: ACK, NACK, LACK, LCFM, EXPLORE
     '''
-    def __init__(self, src, dst, type, V, origin=None, next_hop=None, TTL=100, num=None):
+    def __init__(self, src, dst, type, V, origin=None, next_hop=None, TTL=GLOB.TTL, num=None):
         self.dst = dst
         self.src = src
         if origin is None:
@@ -31,12 +31,16 @@ class Packet(object):
         return p
 
     def __str__(self):
-        return f"{self.type}: {self.src.id} -> {self.dst.id} | origin {self.origin}"
+        string = f"{self.type} | {self.src.id} -> {self.dst.id} | origin {self.origin.id} | TTL {self.TTL}"
+        if self.type is "LCFM":
+            string = f"{string} | next hop {self.next_hop.id}"
+        return string
 
     def Hop(self):
         self.hop += 1
         self.TTL -= 1
         self.cost = GLOB.c*self.hop
+
 
     # def SendTo(self, user):
     #     from net_objects.User import User

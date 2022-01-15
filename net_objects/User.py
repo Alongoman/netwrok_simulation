@@ -185,16 +185,25 @@ class User(object):
             packet = self.buffer[self.buffer_head]
             self.buffer_head += 1 # next in queue
 
-        if packet.TTL < 0:
-            return False
+        if (packet.TTL <= 0):
+            if packet.type != "LCFM":
+                return False
+            if packet.TTL < 0:
+                return False
+
 
         if (packet.TTL == 0) and (packet.type == "LCFM"):
-            p2 = Packet(src=self, dst=packet.src, type="ACK", origin=self, V=self.V)
+            p2 = Packet(src=self, dst=packet.origin, type="ACK", origin=self, V=self.V)
             if packet.dst == self:
-                self.Broadcast(p2)
+                disp("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+                disp(f" user: {self.id} sending ACK through {packet.src.id} ")
+                disp("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
             else:
                 p2.type = "NACK"
-                self.Broadcast(p2)
+                disp("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+                disp(f" user: {self.id} sending NACK through {packet.src.id} ")
+                disp("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            self.Broadcast(packet=p2)
 
         if packet.type in ["ACK","NACK"]:
             self.TSOR2(packet)
@@ -215,13 +224,21 @@ class User(object):
 
         if (packet.type == "LCFM") and ((packet.src in self.neighbors.values()) or (packet.src == self)): # got LCFM from neighbor
             if self == packet.next_hop:
+                disp("##################################################################################################")
+                disp(f" user: {self.id} got LCFM for self from: {packet.src.id}")
+                disp("##################################################################################################")
                 self.Broadcast(packet)
                 for u in self.neighbors.values():
                     u.HandleRecentPacket()
                 if self.LACK:
                     self.HandleLack()
                 packet.V = self.V
-                packet.next_hop = self.GetNextHop()
+                V_dict = self.V_dict.copy()
+                if (len(V_dict) > 1) and (packet.src in V_dict):
+                    V_dict.pop(packet.src) # if got equals LACK dont send packet back from where is came from
+                if (len(V_dict) > 1) and (packet.origin in V_dict):
+                    V_dict.pop(packet.origin) # if got equals LACK dont send packet back from where is came from
+                packet.next_hop = self.GetNextHop(V_dict)
                 self.Broadcast(packet=packet)
 
     def HandleLack(self):
@@ -237,22 +254,27 @@ class User(object):
     def TSOR2(self, packet):
         ''' handle second part of TSOR algorithm'''
         disp(f"func {'TSOR2'} | user {self.id}")
-        p = Packet(src=self, dst=packet.src, type="LACK", V=self.V)
-        self.SendPacket(packet=p, dst=packet.src)
+        p_lack = self.GenLack(packet)
+        self.SendPacket(dst=p_lack.dst, packet=p_lack)
+
         if packet.V == self.V_dict[packet.src]:
             return
 
-        if self.id != GLOB.N:
+        if self.id != str(GLOB.N.value):
             self.V_dict[packet.src] = packet.V
             self.UpdateV()
 
-        p2 = packet.copy()
-        p2.TTL = 1
-        self.Broadcast(p2)
+        p = packet.copy()
+        self.Broadcast(p)
+        for u in self.neighbors.values():
+            u.HandleRecentPacket()
+        if self.LACK:
+            self.HandleLack()
+
 
     def GenLack(self, packet):
         ''' generate locak ACK packet '''
-        p = Packet(src=self, dst=packet.src, origin=self, type="LACK", V=self.V)
+        p = Packet(src=self, dst=packet.src, origin=self, type="LACK", V=self.V, TTL=1)
         return p
 
     def SendPacket(self, dst, packet):
@@ -289,7 +311,7 @@ class User(object):
     def UpdateV(self):
         ''' equation number 6 in article '''
         disp(f"func {'UpdateV'} | user {self.id}")
-        V = GLOB.c
+        V = GLOB.c.value
         for s,u_dict in self.S.items():
             V_dict = {}
             for u_id,u in u_dict.items():
@@ -327,8 +349,15 @@ class User(object):
     def InitV(self):
         ''' init the distance dictionary V(n,n') '''
         disp(f"func {'InitV'} | user {self.id}")
+        N = str(GLOB.N.value)
         if not self.neighbors:
             self.UpdateNeighbors()
         for u_id, user in self.neighbors.items():
-            self.V_dict[user] = 0
-        self.V = -GLOB.R
+            if u_id == N:
+                self.V_dict[user] = -GLOB.R
+            else:
+                self.V_dict[user] = 0
+        if self.id == N:
+            self.V = -GLOB.R
+        else:
+            self.V = 0

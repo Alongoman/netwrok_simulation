@@ -12,13 +12,15 @@ class Link(object):
     '''
     link object with capacity and users that are using it
     '''
-    def __init__(self, id, transmit_prob=1, capacity=0, src=None, dst=None, users={}):
+    def __init__(self, id, transmit_prob="uniform", capacity=0, src=None, dst=None, users={}):
 
         self.id = id
         self.cap = capacity
         self.load = 0
         self.local_users = {}
         self.users = {}
+        if transmit_prob == "uniform":
+            transmit_prob = np.random.uniform(0.8,0.9)
         self.transmit_prob = transmit_prob
         self.transmit_rand = np.random.binomial(1, transmit_prob)
         for user in users:
@@ -107,11 +109,15 @@ class Link(object):
 
     def Transmit(self, dst, packet):
         if dst.id not in self.local_users:
-            print(f"{dst.id} not in reach, dropping packet: {packet}")
+            disp(f"{dst.id} not in reach, dropping: {packet}")
+        if packet.TTL <= 0:
+            disp(f"packet terminated, dropping: {packet}")
 
         if self.transmit_rand:
             packet.Hop()
+            if packet.type in ["ACK","NACK"]:
+                packet.V = packet.src.V
             dst.RecivePacket(packet=packet)
-            disp(f"PASS: transmit to {dst.id} of packet {packet}")
+            disp(f"PASS: link {self.id} | transmit to: {dst.id} v={dst.V}| packet: {packet}")
         else:
-            disp(f"FAIL: transmit to {dst.id} of packet {packet}")
+            disp(f"FAIL: link {self.id} | transmit to: {dst.id} v={dst.V}| packet: {packet}")

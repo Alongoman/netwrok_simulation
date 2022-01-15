@@ -208,9 +208,10 @@ def Model(size=6, user_id='1',packets=1):
 '''############## Globals ###############'''
 
 class GLOB(IntFlag):
-    R = 1
+    R = 10
     c = 1
-    N = '6'
+    N = 6
+    TTL = 6
     inf = 10**3
     alpha = 1
     print_info = True

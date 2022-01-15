@@ -336,3 +336,5 @@ class NetworkModel(object):
                     lst[i] = 1
                 else:
                     lst[i] = 0
+
+        disp(f"done with packet num {packet_num}")
