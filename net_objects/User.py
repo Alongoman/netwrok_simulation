@@ -35,6 +35,7 @@ class User(object):
         self.buffer_head = 0
         self.Beta = np.random.beta
         self.S = {}
+        self.payoff = 0
 
     def __str__(self):
         dst_id = " "
@@ -170,16 +171,16 @@ class User(object):
         '''if return false then there are no more packets in buffer'''
         disp_func(f"func {'HandlePacket'} | user {self.id}")
 
+        if self.LACK:
+            disp(f"handling LACKS")
+            dict = self.HandleLack()
+            return True
+
         if self.buffer_head >= len(self.buffer) and (not packet):
-            if not self.LACK:
                 disp(f"no more packets on queue of user {self.id}")
                 self.buffer = []
                 self.buffer_head = 0
                 return False
-            else:
-                disp(f"handling LACKS")
-                dict = self.HandleLack()
-                return True
 
         if not packet:
             packet = self.buffer[self.buffer_head]
@@ -194,20 +195,26 @@ class User(object):
                 return False
 
         if (packet.type == "LCFM"):
-            if (packet.TTL == 0) or (packet.dst == self):
+            if (packet.TTL == 0) or ((packet.dst == self) and (packet.next_hop == self)):
                 p2 = Packet(src=self, dst=packet.origin, type="ACK", origin=self, V=self.V)
-                if packet.dst == self:
-                    disp(f" user: {self.id} sending ACK through {packet.src.id} ")
+                if ((packet.dst == self) and (packet.next_hop == self)):
+                    self.payoff = GLOB.R - packet.cost
+                    disp(f"________________ user: {self.id} sending ACK through {packet.src.id} , payoff: {GLOB.R - packet.cost}",color=COLOR.BLUE)
+                    if self.payoff > GLOB.R:
+                        debug = 0
                 else:
                     p2.type = "NACK"
                     disp(f" user: {self.id} sending NACK through {packet.src.id} ")
                 self.SendPacket(dst=packet.src, packet=p2)
+                return True
 
         if packet.type in ["ACK","NACK"]:
             self.TSOR2(packet)
-        else:
+        elif packet.type is "LCFM":
             self.TSOR1(packet)
+
         return True
+
 
     def TSOR0(self):
         ''' TSOR init stage '''
@@ -217,13 +224,14 @@ class User(object):
     def TSOR1(self, packet):
         ''' handle first part of TSOR algorithm'''
         disp_func(f"func {'TSOR1'} | user {self.id}")
-        p_lack = self.GenLack(packet)
-        self.SendPacket(dst=p_lack.dst, packet=p_lack)
+        if packet.type != "LACK":
+            p_lack = self.GenLack(packet)
+            self.SendPacket(dst=p_lack.dst, packet=p_lack)
 
         if (packet.type == "LCFM") and ((packet.src in self.neighbors.values()) or (packet.src == self)): # got LCFM from neighbor
             if self == packet.next_hop:
                 disp(f" user: {self.id} got LCFM for self from: {packet.src.id}")
-                self.Broadcast(packet=packet,skip=packet.origin)
+                self.Broadcast(packet=packet,skip=[packet.origin,packet.src])
                 for u in self.neighbors.values():
                     u.HandleRecentPacket()
                 if self.LACK:
@@ -234,7 +242,7 @@ class User(object):
                     if (len(V_dict) > 1) and (packet.origin in V_dict):
                         V_dict.pop(packet.origin) # if got equals LACK dont send packet back from where is came from
                     packet.next_hop = self.GetNextHop(V_dict)
-                    self.Broadcast(packet=packet,skip=packet.origin)
+                    self.SendPacket(dst=packet.next_hop, packet=packet)
 
     def HandleLack(self):
         disp_func(f"func {'HandleLack'} | user {self.id}")
@@ -253,7 +261,7 @@ class User(object):
     def TSOR2(self, packet):
         ''' handle second part of TSOR algorithm'''
         disp_func(f"func {'TSOR2'} | user {self.id}")
-        p_lack = self.GenLack(packet)
+        p_lack = self.GenLack(packet) # lines 4-6 | redundant in simulation?
         self.SendPacket(dst=p_lack.dst, packet=p_lack)
 
         if (packet.V == self.V_dict[packet.src]):
@@ -268,10 +276,7 @@ class User(object):
 
         p = packet.copy()
         self.Broadcast(packet=p, skip=p.src)
-        for u in self.neighbors.values():
-            u.HandleRecentPacket()
-        if self.LACK:
-            dict = self.HandleLack()
+
 
 
     def GenLack(self, packet):
@@ -290,8 +295,10 @@ class User(object):
     def Broadcast(self, packet, skip=None):
         ''' will send packet to all neighbors'''
         disp_func(f"func {'Broadcast'} | user {self.id}")
+        if not isinstance(skip, list):
+            skip = [skip]
         for u_id,u in self.neighbors.items(): # broadcast locally confirmation
-            if u == skip or u == self:
+            if (u in skip) or (u == self):
                 disp(f"user {self.id} not sending packet to {u_id}")
                 continue
             p = packet.copy()
@@ -356,7 +363,7 @@ class User(object):
             self.UpdateNeighbors()
         for u_id, user in self.neighbors.items():
             if u_id == N:
-                self.V_dict[user] = -GLOB.R
+                self.V_dict[user] = -GLOB.R/2
             else:
                 self.V_dict[user] = 0
         if self.id == N:

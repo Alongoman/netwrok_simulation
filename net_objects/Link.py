@@ -129,8 +129,11 @@ class Link(object):
 
         if dst.id not in self.local_users:
             disp(f"{dst.id} not in reach, dropping: {packet}")
+            return
+
         if packet.TTL <= 0:
-            disp(f"packet terminated, dropping: {packet}")
+            disp(f"DROP PACKET FOR user {dst.id} v={dst.V} || type {packet.type} || from {packet.src.id} || link {self.id} || [{packet}]",color=COLOR.RED)
+            return
 
         packet.Hop()
         if self.transmit_rand:

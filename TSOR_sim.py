@@ -5,6 +5,7 @@ TSOR simulation
 
 import matplotlib.pyplot as plt
 from enum import IntFlag
+import time
 
 
 '''############################################ functions ############################################'''
@@ -180,34 +181,49 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
 
     return net
 
-def DoTSOR(net, user_id='1', packets=1):
-    # print("network links:")
-    # net.Show()
+def DoTSOR(net, user_id='1'):
+    start = time.time()
     print("################")
     print("nodes:")
-    v = []
+    avg_payoff = [0]
+    packets = [0]
     for user in net.users.values():
         print(user)
-    for i in range(1, packets+1):
-        v.append(net.TSOR(user_id=user_id, packet_num=i))
 
+    for i in range(1,packets_num+1,step):
+        payoff = 0
+        for j in range(1,iteration_num+1):
+            payoff += net.TSOR(user_id=user_id, max_packet=i)
+        avg_payoff.append(round(payoff/j,4))
+        packets.append(i)
+
+        if i>10 and sum(avg_payoff) == 0:
+            disp(f"links generated with low transmit probability and algo seems to not converged after {i} iterations pleas run again",color=COLOR.RED)
+            return
+        if avg_payoff[-1] > GLOB.R:
+            debug = 0
+    end = time.time()
+    print(avg_payoff)
+    minutes = int((end-start)/60)
+    secs = int((end-start-(60*minutes)))
+    disp(f"time passed: {minutes}:{secs} minutes",color=COLOR.BLUE)
     plt.figure()
-    plt.plot(v,range(1,packets+1))
-    plt.title(f"src node value")
+    plt.plot(packets,avg_payoff)
+    plt.title(f"average payoff, net size={size} iterations={iteration_num}, took {minutes}:{secs} minutes")
     plt.xlabel("number of packets")
-    # plt.show()
+    plt.ylabel("average payoff")
+    plt.show()
 
-def Model(size=6, user_id='1',packets=1):
+def Model(size=6, user_id='1'):
     if size == 6:
         net_p = GenerateSmallWirelessModel(capacity=1,rate=1, alpha=GLOB.alpha)
-        net_p.Show()
-        net_p.MapNeighboors()
-        DoTSOR(net=net_p, user_id=user_id, packets=packets)
-    if size == 60:
+
+    elif size == 60:
         net_p = GenerateBigWirelessModel(capacity=10,rate=1, alpha=GLOB.alpha)
-        net_p.Show()
-        net_p.MapNeighboors()
-        DoTSOR(net_p,user_id, packets=packets)
+
+    net_p.Show()
+    net_p.MapNeighboors()
+    DoTSOR(net_p,user_id)
 
 '''############## Globals ###############'''
 
@@ -251,7 +267,10 @@ def disp(info,end="\n", color=""):
         print(f"{color}{info}{endc}",end=end)
 
 if __name__ == "__main__":
-    packets_num = 1
+    packets_num = 1000
+    iteration_num = 30
+    step = 10
+    size = 6
 
-    Model(size=6, user_id='1', packets=packets_num)
+    Model(size=size, user_id='1')
 

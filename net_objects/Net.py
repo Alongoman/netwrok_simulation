@@ -317,25 +317,35 @@ class NetworkModel(object):
         plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
 
-    def TSOR(self, user_id, packet_num=0):
+    def TSOR(self, user_id, max_packet=1):
         ''' iterate TSOR from start from user_id until no more packets to route'''
+
+        # max_packet = 6 # TODO remove this
 
         for u_id,u in self.users.items():
             u.TSOR0()
 
         src = self.users[user_id]
         dst = src.dst
-        packet = Packet(src=src, dst=dst, next_hop=src, origin=src, type="LCFM",V=src.V, num=packet_num)
-        src.RecivePacket(packet)
+        total_payoff = 0
+        for i in range(1,max_packet+1):
+            dst.payoff = 0
+            packet = Packet(src=src, dst=dst, next_hop=src, origin=src, type="LCFM",V=src.V, num=i)
+            src.RecivePacket(packet)
 
-        lst = [1]*len(self.users)
-        while sum(lst) > 0: # still handling packets
-            for i, u in enumerate(self.users.values()):
-                x = u.HandlePacket()
-                if x:
-                    lst[i] = 1
-                else:
-                    lst[i] = 0
+            lst = [1]*len(self.users)
+            while sum(lst) > 0: # still handling packets
+                for j, u in enumerate(self.users.values()):
+                    x = u.HandlePacket()
+                    if x:
+                        lst[j] = 1
+                    else:
+                        lst[j] = 0
 
-        disp(f"done with packet num {packet_num}")
-        return self.users[user_id].V
+            disp(f"___________________________  done with packet num {i}, payoff={dst.payoff}  _______________________",color=COLOR.BLUE)
+            total_payoff += dst.payoff
+        if total_payoff/i > GLOB.R:
+            debug = 0
+
+
+        return total_payoff/i

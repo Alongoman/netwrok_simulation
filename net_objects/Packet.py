@@ -40,7 +40,8 @@ class Packet(object):
     def copy(self):
         now = datetime.now()
         num = now.strftime("%H:%M:%S")
-        p = Packet(src=self.src, dst=self.dst, type=self.type, origin=self.origin, next_hop=self.next_hop, V=self.V, TTL=self.TTL, num=num)
+        p = Packet(src=self.src, dst=self.dst, type=self.type, origin=self.origin, next_hop=self.next_hop, V=self.V, num=num)
+        p.TTL = self.TTL
         return p
 
     def __str__(self):
@@ -53,25 +54,3 @@ class Packet(object):
         self.hop += 1
         self.TTL -= 1
         self.cost = GLOB.c*self.hop
-
-
-    # def SendTo(self, user):
-    #     from net_objects.User import User
-    #     assert isinstance(user, User)
-    #     self.last_hop = self.next_hop
-    #     self.next_hop = user
-    #     self.TTL -= 1
-    #     self.hop += 1
-    #     self.cost = GLOB.c*self.hop
-    #     if self.type == "LACK":
-    #         user.LACK.append(self)
-    #     else:
-    #         user.buffer.append(self)
-    #
-    # def SendLack(self, user):
-    #     p = self.copy()
-    #     p.TTL = 1
-    #     p.last_hop = self.next_hop
-    #     p.next_hop = user
-    #     p.dst = user
-    #     user.LACK.append(p)
