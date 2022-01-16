@@ -9,9 +9,7 @@ from enum import IntFlag
 
 '''############################################ functions ############################################'''
 
-def disp(info):
-    if GLOB.print_info:
-        print(info)
+
 
 def combs(xs, i=0):
     if i==len(xs):
@@ -183,15 +181,21 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
     return net
 
 def DoTSOR(net, user_id='1', packets=1):
-    print("network links:")
-    net.Show()
+    # print("network links:")
+    # net.Show()
     print("################")
     print("nodes:")
+    v = []
     for user in net.users.values():
         print(user)
     for i in range(1, packets+1):
-        net.TSOR(user_id=user_id, packet_num=i)
+        v.append(net.TSOR(user_id=user_id, packet_num=i))
 
+    plt.figure()
+    plt.plot(v,range(1,packets+1))
+    plt.title(f"src node value")
+    plt.xlabel("number of packets")
+    # plt.show()
 
 def Model(size=6, user_id='1',packets=1):
     if size == 6:
@@ -215,16 +219,39 @@ class GLOB(IntFlag):
     inf = 10**3
     alpha = 1
     print_info = True
+    print_func = False
     L = 5
     find_short_path = False
     max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
     zero_th = 0.001 # x < zero_th -> x == 0
 
+class COLOR:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    ENDC = '\033[0m'
+    CYAN = '\033[96m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def disp_func(info, end="\n", color=""):
+    endc = COLOR.ENDC
+    if not color:
+        endc = ""
+    if GLOB.print_func:
+        print(f"{color}{info}{endc}",end=end)
+
+def disp(info,end="\n", color=""):
+    endc = COLOR.ENDC
+    if not color:
+        endc = ""
+    if GLOB.print_info:
+        print(f"{color}{info}{endc}",end=end)
 
 if __name__ == "__main__":
-
     packets_num = 1
 
     Model(size=6, user_id='1', packets=packets_num)
 
-    plt.show()

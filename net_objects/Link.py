@@ -20,7 +20,7 @@ class Link(object):
         self.local_users = {}
         self.users = {}
         if transmit_prob == "uniform":
-            transmit_prob = np.random.uniform(0.8,0.9)
+            transmit_prob = np.random.uniform(0.1,0.9)
         self.transmit_prob = transmit_prob
         self.transmit_rand = np.random.binomial(1, transmit_prob)
         for user in users:
@@ -108,16 +108,45 @@ class Link(object):
         return 1/x
 
     def Transmit(self, dst, packet):
+        ack = "$$$$$$$$$$$$$$$$$$$$$$$$"
+        nack = "XXXXXXXXXXXXXXXXXXXXXXXX"
+        lack = "########################"
+        lcfm = "@@@@@@@@@@@@@@@@@@@@@@@@"
+        if packet.type is "ACK":
+            s = ack
+            c = COLOR.GREEN
+        elif packet.type is "NACK":
+            s = nack
+            c = COLOR.YELLOW
+        elif packet.type is "LACK":
+            s = lack
+            c = COLOR.CYAN
+        elif packet.type is "LCFM":
+            s = lcfm
+            c = COLOR.HEADER
+        else:
+            s = ""
+
         if dst.id not in self.local_users:
             disp(f"{dst.id} not in reach, dropping: {packet}")
         if packet.TTL <= 0:
             disp(f"packet terminated, dropping: {packet}")
 
+        packet.Hop()
         if self.transmit_rand:
-            packet.Hop()
             if packet.type in ["ACK","NACK"]:
                 packet.V = packet.src.V
             dst.RecivePacket(packet=packet)
-            disp(f"PASS: link {self.id} | transmit to: {dst.id} v={dst.V}| packet: {packet}")
+            disp(f"{s} PASS: user {dst.id} v={dst.V} || got {packet.type} || from {packet.src.id} || link {self.id} || [{packet}]",color=c)
         else:
-            disp(f"FAIL: link {self.id} | transmit to: {dst.id} v={dst.V}| packet: {packet}")
+            # for i in range(packet.TTL): # retransmission
+            #     packet.Hop()
+            #     if self.transmit_rand:
+            #         if packet.type in ["ACK","NACK"]:
+            #             packet.V = packet.src.V
+            #         dst.RecivePacket(packet=packet)
+            #         disp(f"{s} PASS: user {dst.id} v={dst.V} || got {packet.type} || from {packet.src.id} || link {self.id} || [{packet}]",color=c)
+            #         return
+            # packet.src.RecivePacket(packet=packet)
+
+            disp(f"FAIL: user {dst.id} v={dst.V} || got {packet.type} || from {packet.src.id} || link {self.id} || [{packet}]",color=COLOR.RED)

@@ -325,7 +325,7 @@ class NetworkModel(object):
 
         src = self.users[user_id]
         dst = src.dst
-        packet = Packet(src=src, dst=dst, next_hop=src, origin=src, type="LCFM", V=-GLOB.R, num=packet_num, TTL=10)
+        packet = Packet(src=src, dst=dst, next_hop=src, origin=src, type="LCFM",V=src.V, num=packet_num)
         src.RecivePacket(packet)
 
         lst = [1]*len(self.users)
@@ -338,3 +338,4 @@ class NetworkModel(object):
                     lst[i] = 0
 
         disp(f"done with packet num {packet_num}")
+        return self.users[user_id].V
