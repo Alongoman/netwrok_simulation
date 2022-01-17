@@ -26,6 +26,7 @@ class User(object):
         for link in links:
             self.Connect(link)
         self.neighbors = {}
+        self.link2user = {}
         self.V_dict = {}
         self.V = None
         self.a = {}
@@ -92,9 +93,12 @@ class User(object):
 
     def GetLink(self, user):
         ''' check wheter or not user is 1 link away from self, if so return the link to it'''
+        if user in self.link2user:
+            return self.link2user[user]
         for l in self.local_links.values():
             for u in l.local_users.values():
                 if u is user:
+                    self.link2user[u] = l
                     return l
         return None
 
@@ -224,16 +228,20 @@ class User(object):
     def TSOR1(self, packet):
         ''' handle first part of TSOR algorithm'''
         disp_func(f"func {'TSOR1'} | user {self.id}")
-        if packet.type != "LACK":
-            p_lack = self.GenLack(packet)
-            self.SendPacket(dst=p_lack.dst, packet=p_lack)
+        # if packet.type != "LACK":
+        #     p_lack = self.GenLack(packet)
+        #     self.SendPacket(dst=p_lack.dst, packet=p_lack)
 
         if (packet.type == "LCFM") and ((packet.src in self.neighbors.values()) or (packet.src == self)): # got LCFM from neighbor
             if self == packet.next_hop:
                 disp(f" user: {self.id} got LCFM for self from: {packet.src.id}")
-                self.Broadcast(packet=packet,skip=[packet.origin,packet.src])
+                # self.Broadcast(packet=packet,skip=[packet.origin,packet.src])
                 for u in self.neighbors.values():
-                    u.HandleRecentPacket()
+                    # u.HandleRecentPacket()
+                    link = self.GetLink(u)
+                    if link.transmit_rand: # transmited successfully the LCFM
+                        if link.transmit_rand: # successfully got LACK:
+                            self.RecivePacket(Packet(src=u,dst=self,origin=u,TTL=0,type="LACK",V=u.V))
                 if self.LACK:
                     V_dict = self.HandleLack()
                     packet.V = self.V
@@ -329,6 +337,7 @@ class User(object):
             t = self.Beta(self.a[s], self.b[s])
             V += t*next.V
         self.V = min(0, V)
+        self.V = max((-GLOB.R+GLOB.c),self.V)
 
     def UpdateBetaParams(self, s):
         ''' equation number 5 in article '''

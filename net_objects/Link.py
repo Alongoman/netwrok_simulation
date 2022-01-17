@@ -127,8 +127,8 @@ class Link(object):
         else:
             s = ""
 
-        if dst.id not in self.local_users:
-            disp(f"{dst.id} not in reach, dropping: {packet}")
+        if dst not in self.local_users.values():
+            disp(f"{dst} not in reach, dropping: {packet}")
             return
 
         if packet.TTL <= 0:

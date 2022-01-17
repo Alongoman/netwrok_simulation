@@ -9,19 +9,20 @@ class Packet(object):
     '''
     Packet of information: ACK, NACK, LACK, LCFM, EXPLORE
     '''
-    def __init__(self, src, dst, type, V, origin=None, next_hop=None, TTL=1, num=None):
+    def __init__(self, src, dst, type, V=None, origin=None, next_hop=None, TTL=None, num=None):
         self.dst = dst
         self.src = src
         if origin is None:
             origin = src
         self.origin = origin
         self.type = type
-        if type is "LACK":
-            TTL = 1
-        if type is "LCFM":
-            TTL = GLOB.TTL
-        if type in ["ACK","NACK"]:
-            TTL = GLOB.TTL
+        if TTL is None:
+            if type is "LACK":
+                TTL = 1
+            if type is "LCFM":
+                TTL = GLOB.TTL
+            if type in ["ACK","NACK"]:
+                TTL = GLOB.TTL
 
         if type is not "LCFM":
             next_hop = None

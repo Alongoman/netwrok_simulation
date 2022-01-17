@@ -30,7 +30,7 @@ def get_combs(iters):
             res.add(s)
     return res
 
-def fix_str(lst):
+def fix_str2(lst):
     elem = sorted(lst)
     s = ""
     q = str(elem)[1:-1]
@@ -40,6 +40,12 @@ def fix_str(lst):
         s += str(el)
     return s
 
+def fix_str(lst):
+    q = sorted(lst)
+    s = ""
+    for el in q:
+        s += str(el)
+    return s
 
 def GetRatesDiff(rates1, rates2):
     diff = [0]*len(rates1)
@@ -91,8 +97,8 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
     L = 11
     U = 6
     net = NetworkModel(name="TSOR 6 nodes", alpha=alpha)
-    print(f"building model named '{net.name}'")
-    print(f"generating {L} links and {U} users")
+    disp(f"building model named '{net.name}'")
+    disp(f"generating {L} links and {U} users")
 
     net.users['1'] = User(id='1', rate=rate, num=1)
     net.users['2'] = User(id='2', rate=rate, num=2)
@@ -181,49 +187,55 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
 
     return net
 
-def DoTSOR(net, user_id='1'):
-    start = time.time()
-    print("################")
-    print("nodes:")
-    avg_payoff = [0]
-    packets = [0]
-    for user in net.users.values():
-        print(user)
-
-    for i in range(1,packets_num+1,step):
-        payoff = 0
-        for j in range(1,iteration_num+1):
-            payoff += net.TSOR(user_id=user_id, max_packet=i)
-        avg_payoff.append(round(payoff/j,4))
-        packets.append(i)
-
-        if i>10 and sum(avg_payoff) == 0:
-            disp(f"links generated with low transmit probability and algo seems to not converged after {i} iterations pleas run again",color=COLOR.RED)
-            return
-        if avg_payoff[-1] > GLOB.R:
-            debug = 0
-    end = time.time()
-    print(avg_payoff)
-    minutes = int((end-start)/60)
-    secs = int((end-start-(60*minutes)))
-    disp(f"time passed: {minutes}:{secs} minutes",color=COLOR.BLUE)
-    plt.figure()
-    plt.plot(packets,avg_payoff)
-    plt.title(f"average payoff, net size={size} iterations={iteration_num}, took {minutes}:{secs} minutes")
-    plt.xlabel("number of packets")
-    plt.ylabel("average payoff")
-    plt.show()
-
-def Model(size=6, user_id='1'):
+def Model(size=6):
     if size == 6:
         net_p = GenerateSmallWirelessModel(capacity=1,rate=1, alpha=GLOB.alpha)
 
     elif size == 60:
         net_p = GenerateBigWirelessModel(capacity=10,rate=1, alpha=GLOB.alpha)
 
-    net_p.Show()
     net_p.MapNeighboors()
-    DoTSOR(net_p,user_id)
+
+    return net_p
+
+def DoTSOR(size=6, user_id='1'):
+    start = time.time()
+    print("################")
+    print("nodes:")
+    avg_payoff = max_packet_list.copy()
+    packets = max_packet_list
+
+    for k,p in enumerate(max_packet_list):
+        payoff = 0
+        for l in range(1,iteration_num+1):
+            net = Model(size=size)
+            payoff += net.TSOR(user_id=user_id, max_packet=p)
+            disp_progress(f"______________________________ done {round(100*(k*iteration_num + l)/(len(max_packet_list)*iteration_num),1)}% ______________________________",color=COLOR.HEADER,progress=round(100*(k*iteration_num + l)/(len(max_packet_list)*iteration_num),2))
+        avg_payoff[k] = (round(payoff/l,4))
+
+        if k>10 and sum(avg_payoff) == 0:
+            disp(f"links generated with low transmit probability and algo seems to not converged after {k} iterations pleas run again",color=COLOR.RED)
+            return
+
+    end = time.time()
+    print(avg_payoff)
+    minutes = int((end-start)/60)
+    secs = int((end-start-(60*minutes)))
+    if not minutes:
+        time_string = f"{secs} seconds"
+    else:
+        if len(str(secs)) == 1:
+            secs = f"0{secs}"
+        time_string = f"{minutes}:{secs} minutes"
+    disp(f"time passed: {time_string}",color=COLOR.BLUE)
+    plt.figure()
+    plt.plot(packets,avg_payoff)
+    plt.title(f"average payoff, net size={size} iterations={iteration_num}, took {time_string}")
+    plt.xlabel("number of packets")
+    plt.ylabel("average payoff")
+    plt.show()
+
+
 
 '''############## Globals ###############'''
 
@@ -234,12 +246,14 @@ class GLOB(IntFlag):
     TTL = 6
     inf = 10**3
     alpha = 1
-    print_info = True
+    print_progress = True
+    print_info = False
     print_func = False
     L = 5
     find_short_path = False
     max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
     zero_th = 0.001 # x < zero_th -> x == 0
+
 
 class COLOR:
     HEADER = '\033[95m'
@@ -251,6 +265,18 @@ class COLOR:
     CYAN = '\033[96m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+def disp_progress(info, end="\n", color="",progress=0):
+    endc = COLOR.ENDC
+    if not color:
+        endc = ""
+    if GLOB.print_progress:
+        passed = "#"*int(progress)
+        gap = " "*(100-int(progress))
+        progress_bar = "["+passed+gap+"]"
+        print ("\033[A                             \033[A")
+        print(f"{color}{info}{' '*(80-len(info))} | {progress_bar}{endc}",end=end)
+
 
 def disp_func(info, end="\n", color=""):
     endc = COLOR.ENDC
@@ -267,10 +293,14 @@ def disp(info,end="\n", color=""):
         print(f"{color}{info}{endc}",end=end)
 
 if __name__ == "__main__":
-    packets_num = 1000
+    max_packet_list = [1]
+    max_packet_list += [i*3 for i in range(1,333)]
     iteration_num = 30
-    step = 10
+    step = 1
     size = 6
 
-    Model(size=size, user_id='1')
+
+    DoTSOR(size=size,user_id="1")
+
+
 
