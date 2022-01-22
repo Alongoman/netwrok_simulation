@@ -6,6 +6,7 @@ TSOR simulation
 import matplotlib.pyplot as plt
 from enum import IntFlag
 import time
+import json
 
 
 '''############################################ functions ############################################'''
@@ -205,17 +206,27 @@ def DoTSOR(size=6, user_id='1'):
     avg_payoff = max_packet_list.copy()
     packets = max_packet_list
 
-    for k,p in enumerate(max_packet_list):
-        payoff = 0
-        for l in range(1,iteration_num+1):
-            net = Model(size=size)
-            payoff += net.TSOR(user_id=user_id, max_packet=p)
-            disp_progress(f"______________________________ done {round(100*(k*iteration_num + l)/(len(max_packet_list)*iteration_num),1)}% ______________________________",color=COLOR.HEADER,progress=round(100*(k*iteration_num + l)/(len(max_packet_list)*iteration_num),2))
-        avg_payoff[k] = (round(payoff/l,4))
+    if load_results:
+        with open(load_file, 'r') as f:
+            avg_payoff = json.load(f)
+    else:
+        for k,p in enumerate(max_packet_list):
+            payoff = 0
+            for l in range(1,iteration_num+1):
+                net = Model(size=size)
+                payoff += net.TSOR(user_id=user_id, max_packet=p)
+                disp_progress(f"______________________________ done {round(100*(k*iteration_num + l)/(len(max_packet_list)*iteration_num),1)}% ______________________________",color=COLOR.HEADER,progress=round(100*(k*iteration_num + l)/(len(max_packet_list)*iteration_num),2))
+            avg_payoff[k] = (round(payoff/l,4))
 
-        if k>10 and sum(avg_payoff) == 0:
-            disp(f"links generated with low transmit probability and algo seems to not converged after {k} iterations pleas run again",color=COLOR.RED)
-            return
+            if k>10 and sum(avg_payoff) == 0:
+                disp(f"links generated with low transmit probability and algo seems to not converged after {k} iterations pleas run again",color=COLOR.RED)
+                return
+
+    if save_results:
+        f_name = f"net size {size}, iterations {iteration_num}, max packet count {max_packet_list[-1]}, packet samples {len(max_packet_list)}.json"
+        with open(f_name, 'w') as f:
+            json.dump(avg_payoff, f, indent=2)
+
 
     end = time.time()
     print(avg_payoff)
@@ -227,12 +238,17 @@ def DoTSOR(size=6, user_id='1'):
         if len(str(secs)) == 1:
             secs = f"0{secs}"
         time_string = f"{minutes}:{secs} minutes"
+
+    plt_title = f"Average Payoff, net size={size} iterations={iteration_num}"
+    if not load_file:
+        plt_title += f", took {time_string}"
     disp(f"time passed: {time_string}",color=COLOR.BLUE)
     plt.figure()
     plt.plot(packets,avg_payoff)
-    plt.title(f"average payoff, net size={size} iterations={iteration_num}, took {time_string}")
-    plt.xlabel("number of packets")
-    plt.ylabel("average payoff")
+    plt.title(plt_title)
+    plt.xlabel("Number of Packets")
+    plt.ylabel("Average Payoff")
+    plt.ylim([0,7])
     plt.show()
 
 
@@ -293,11 +309,15 @@ def disp(info,end="\n", color=""):
         print(f"{color}{info}{endc}",end=end)
 
 if __name__ == "__main__":
+    load_results = False
+    save_results = False
+    load_file = "net size 6, iterations 50, max packet count 1995, packet samples 666.json"
     max_packet_list = [1]
-    max_packet_list += [i*3 for i in range(1,333)]
-    iteration_num = 30
+    max_packet_list += [i*10 for i in range(1,100)]
+    iteration_num = 50
     step = 1
     size = 6
+
 
 
     DoTSOR(size=size,user_id="1")
