@@ -3,7 +3,7 @@ Alon Goldamnn Nov 25 2021
 Computer exercise 1 - network net_objects
 '''
 
-from home_exercise import *
+from network_sim import *
 
 class Link(object):
     '''
