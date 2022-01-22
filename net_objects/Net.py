@@ -30,7 +30,7 @@ class NetworkModel(object):
         self.find_short_path = False
 
     def __str__(self):
-        return "network model name: '{}' with total {} links and {} users".format(self.name, len(self.links), len(self.users))
+        return f"network model name: '{self.model_name}' with total {len(self.links)} links and {len(self.users)} users"
 
     def Show(self):
         print(self)
@@ -162,7 +162,7 @@ class NetworkModel(object):
 
     def UpdateRatesDual(self, step=0.01, threshold=0.01, iterations=500, iter_thresh=20):
         ''' iterate until grad descent convergence or until timeout'''
-        self.model_name = "Primal"
+        self.model_name = "Dual"
         count = 0
         self.UpdateRates(iter=0)
         self.UpdateLinksLoad()
@@ -267,6 +267,8 @@ class NetworkModel(object):
         user.ClearLinks()
         u_id = node_and_cost[dst.id][1]
         link = node_and_cost[dst.id][2]
+        if link is None:
+            return
         user.Connect(self.links[link])
         while u_id != user.id:
             link = node_and_cost[u_id][2]
@@ -282,7 +284,7 @@ class NetworkModel(object):
         if x == 0:
             return GLOB.inf
         try:
-            res = 1/(x**self.alpha)
+            res = 1/(x**self.alpha + 1e-3)
         except OverflowError:
             disp("utility tag too large")
             res = GLOB.inf

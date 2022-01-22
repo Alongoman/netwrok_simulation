@@ -95,8 +95,9 @@ class Link(object):
 
     def Penalty(self, x):
         if self.load > self.cap:
-            return x*(((self.load/self.cap)-1)**4)
-        if x < 0.01:
-            return 100
-        return 1/x
-
+            # return x*(((self.load/self.cap)-1)**4)
+            return x*((self.load/self.cap)-1)
+        # if x < 0.01:
+        #     return 100
+        # return 1/x
+        return x

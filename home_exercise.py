@@ -154,10 +154,54 @@ def Model_Serial(step, threshold, iterations, alpha=1):
     net_p.UpdateLinksLoad()
     net_p.Show()
     DoAlgorithm(net_p, name="Primal", step=step, threshold=threshold, iterations=iterations)
+    net_p.model_name = f"Serial - Primal | alpha:{alpha}"
+
     net_d = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
     net_d.UpdateLinksLoad()
     DoAlgorithm(net_d, name="Dual", step=step, threshold=threshold, iterations=iterations)
-    net_p.Show()
+    net_d.model_name = f"Serial - Dual | alpha:{alpha}"
+
+    return net_p,net_d
+
+def Model_Dijkstra(step, threshold, iterations, alpha=1):
+    # net_d1 = GenerateWebModel(L=GLOB.L, capacity=1, alpha=alpha)
+    net_d1 = GenerateWebModel(rate=0.1, capacity=1, alpha=alpha)
+    net_d1.UpdateLinksLoad()
+    net_d1.find_short_path = "Dijkstra"
+    net_d1.model_name = "Dijkstra - Primal"
+    net_d1.Show()
+    DoAlgorithm(net_d1, name="Primal", step=step, threshold=threshold, iterations=iterations)
+    net_d1.model_name = f"(Web) Dijkstra - Primal | alpha:{alpha}"
+
+    # net_d2 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
+    net_d2 = GenerateWebModel(rate=0.1, capacity=1, alpha=alpha)
+    net_d2.UpdateLinksLoad()
+    net_d2.find_short_path = "Dijkstra"
+    net_d2.Show()
+    DoAlgorithm(net_d2, name="Dual", step=step, threshold=threshold, iterations=iterations)
+    net_d2.model_name = f"(Web) Dijkstra - Dual | alpha:{alpha}"
+
+    return net_d1,net_d2
+
+def Model_BellmanFord(step, threshold, iterations, alpha=1):
+
+    # net_b1 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
+    net_b1 = GenerateWebModel(rate=0.1, capacity=1, alpha=alpha)
+    net_b1.UpdateLinksLoad()
+    net_b1.find_short_path = "BellmanFord"
+    net_b1.Show()
+    DoAlgorithm(net_b1, name="Primal", step=step, threshold=threshold, iterations=iterations)
+    net_b1.model_name = f"(Web) BellmanFord - Primal | alpha:{alpha}"
+
+    # net_b2 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
+    net_b2 = GenerateWebModel(rate=0.1, capacity=1, alpha=alpha)
+    net_b2.UpdateLinksLoad()
+    net_b2.find_short_path = "BellmanFord"
+    net_b2.Show()
+    DoAlgorithm(net_b2, name="Dual", step=step, threshold=threshold, iterations=iterations)
+    net_b2.model_name = f"(Web) BellmanFord - Dual | alpha:{alpha}"
+
+    return net_b1,net_b2
 
 def Model_Web(step, threshold, iterations, alpha=1):
     net_p = GenerateWebModel(capacity=10,rate=2, alpha=alpha)
@@ -173,11 +217,11 @@ def Model_Web(step, threshold, iterations, alpha=1):
     # DoAlgorithm(net_p, name="Dual", step=step, threshold=threshold, iterations=iterations)
 
 
-    # net_d = GenerateWebModel(capacity=1, alpha=alpha)
-    # net_d.UpdateLinksLoad()
-    # net_d.find_short_path = "BellmanFord"
-    # net_d.Show()
-    # DoAlgorithm(net_d, name="Primal", step=step, threshold=threshold, iterations=iterations)
+    net_d = GenerateWebModel(capacity=1, alpha=alpha)
+    net_d.UpdateLinksLoad()
+    net_d.find_short_path = "BellmanFord"
+    net_d.Show()
+    DoAlgorithm(net_d, name="Primal", step=step, threshold=threshold, iterations=iterations)
 
     # net_d = GenerateWebModel(capacity=1, alpha=alpha)
     # net_d.UpdateLinksLoad()
@@ -197,24 +241,34 @@ class GLOB(IntFlag):
 
 
 if __name__ == "__main__":
-    step = 0.001
+    step = 0.002
     threshold = 0.001
-    iterations = 2*10**3
+    iterations = 1*10**4
 
-    # net_web = GenerateWebModel(capacity=1)
-    #
-    # path = net_web.UpdateRouteDijkstra(net_web.users['a'])
-    # print(path)
-    #
-    # path = net_web.UpdateRouteBellmanFord(net_web.users['c'])
-    # print(path)
 
-    # Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=1)
-    # Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=2)
-    # Model_Serial(step=step*10, threshold=threshold*10, iterations=iterations, alpha=3)
+    net_p1,net_d1 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=1)
+    net_p2,net_d2 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=2)
+    net_p_inf,net_d_inf = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=GLOB.inf)
+    net_p_dijkstra,net_d_dijkstra = Model_Dijkstra(step=step, threshold=threshold, iterations=iterations, alpha=1)
+    net_p_BF,net_d_BF = Model_BellmanFord(step=step, threshold=threshold, iterations=iterations, alpha=1)
 
-    Model_Web(step=step, threshold=threshold, iterations=iterations, alpha=1)
+    net_p1.Show()
+    net_d1.Show()
+    net_p2.Show()
+    net_d2.Show()
+    net_p_inf.Show()
+    net_d_inf.Show()
+    net_p_dijkstra.Show()
+    net_d_dijkstra.Show()
+    net_p_BF.Show()
+    net_d_BF.Show()
 
     plt.show()
 
-# TODO fix dijkstra sometimes it fails
+
+
+
+    # net_web = GenerateWebModel(rate=0.1, capacity=10)
+    # net_web.Show()
+    # net_serial = GenerateSerialModel(L=GLOB.L,capacity=1)
+    # net_serial.Show()
