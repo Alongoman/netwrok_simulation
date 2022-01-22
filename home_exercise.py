@@ -13,6 +13,13 @@ def disp(info):
     if GLOB.print_info:
         print(info)
 
+def disp_color(info,end="\n", color=""):
+    endc = COLOR.ENDC
+    if not color:
+        endc = ""
+    if GLOB.print_info:
+        print(f"{color}{info}{endc}",end=end)
+
 def GetRatesDiff(rates1, rates2):
     diff = [0]*len(rates1)
     for idx,elem in enumerate(rates1):
