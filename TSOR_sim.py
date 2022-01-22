@@ -313,8 +313,8 @@ if __name__ == "__main__":
     save_results = False
     load_file = "net size 6, iterations 50, max packet count 1995, packet samples 666.json"
     max_packet_list = [1]
-    max_packet_list += [i*10 for i in range(1,100)]
-    iteration_num = 50
+    max_packet_list += [i*10 for i in range(1,50)]
+    iteration_num = 5
     step = 1
     size = 6
 

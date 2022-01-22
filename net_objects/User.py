@@ -337,7 +337,7 @@ class User(object):
             t = self.Beta(self.a[s], self.b[s])
             V += t*next.V
         self.V = min(0, V)
-        self.V = max((-GLOB.R+GLOB.c),self.V)
+        self.V = max((-GLOB.R*10+GLOB.c),self.V)
 
     def UpdateBetaParams(self, s):
         ''' equation number 5 in article '''
