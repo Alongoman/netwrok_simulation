@@ -232,31 +232,31 @@ if __name__ == "__main__":
     iterations = 5*10**3
 
 
-    # net_p1,net_d1 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=1)
-    # net_p2,net_d2 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=2)
-    # net_p_inf,net_d_inf = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=GLOB.inf)
-    # net_p_dijkstra,net_d_dijkstra = Model_Dijkstra(step=step, threshold=threshold, iterations=iterations, alpha=1)
-    # net_p_BF,net_d_BF = Model_BellmanFord(step=step, threshold=threshold, iterations=iterations, alpha=4)
-    #
-    # net_p1.Show()
-    # net_d1.Show()
-    # net_p2.Show()
-    # net_d2.Show()
-    # net_p_inf.Show()
-    # net_d_inf.Show()
-    # net_p_dijkstra.Show()
-    # net_d_dijkstra.Show()
-    # net_p_BF.Show()
-    # net_d_BF.Show()
-    #
-    # plt.show()
+    net_p1,net_d1 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=1)
+    net_p2,net_d2 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=2)
+    net_p_inf,net_d_inf = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=GLOB.inf)
+    net_p_dijkstra,net_d_dijkstra = Model_Dijkstra(step=step, threshold=threshold, iterations=iterations, alpha=1)
+    net_p_BF,net_d_BF = Model_BellmanFord(step=step, threshold=threshold, iterations=iterations, alpha=4)
+
+    net_p1.Show()
+    net_d1.Show()
+    net_p2.Show()
+    net_d2.Show()
+    net_p_inf.Show()
+    net_d_inf.Show()
+    net_p_dijkstra.Show()
+    net_d_dijkstra.Show()
+    net_p_BF.Show()
+    net_d_BF.Show()
+
+    plt.show()
 
 
 
 
-    net_web = GenerateWebModel(rate=0.1, capacity=10)
-    net_web.model_name = "web model"
-    net_web.Show()
-    net_serial = GenerateSerialModel(L=GLOB.L,capacity=1)
-    net_serial.model_name = "serial model"
-    net_serial.Show()
+    # net_web = GenerateWebModel(rate=0.1, capacity=10)
+    # net_web.model_name = "web model"
+    # net_web.Show()
+    # net_serial = GenerateSerialModel(L=GLOB.L,capacity=1)
+    # net_serial.model_name = "serial model"
+    # net_serial.Show()
