@@ -1,12 +1,14 @@
 '''
 Alon Goldamnn Nov 25 2021
-Computer exercise 1 - network net_objects
+network net_objects
 '''
 
 import random
 from net_objects.User import User
 from net_objects.Link import Link
+from net_objects.Packet import Packet
 from home_exercise import *
+from TSOR_sim import *
 import numpy as np
 
 class NetworkModel(object):
@@ -31,6 +33,9 @@ class NetworkModel(object):
 
     def __str__(self):
         return f"network model name: '{self.model_name}' with total {len(self.links)} links and {len(self.users)} users"
+
+    def GetNumberOfUsers(self):
+        return len(self.users)
 
     def Show(self):
         disp_color(self,color=COLOR.HEADER)
@@ -63,10 +68,11 @@ class NetworkModel(object):
     def MapNeighboors(self):
         self.neigboors = {}
         for u1 in self.users.values():
+            u1.UpdateNeighbors()
             self.neigboors[u1.id] = {}
             for u2 in self.users.values():
                 link = u1.GetLink(u2)
-                if link:
+                if link and u2 != u1:
                     self.neigboors[u1.id][u2.id] = u2
 
     def UpdateLinksLoad(self):
@@ -87,7 +93,6 @@ class NetworkModel(object):
             if x>GLOB.max_plot_rate:
                 x = 0
             self.plot_rates[iter][user.num] = x
-
 
     def IteratePrimaly(self, step, iter):
         ''' one iteration of the primal algorithm'''
@@ -179,7 +184,6 @@ class NetworkModel(object):
                 print("converged after {} iterations".format(i))
                 return
         print("timed out after {} iterations".format(iterations))
-
 
     def UpdateRouteDijkstra(self, user):
         ''' find min cost and path TO each net_objects node FROM user'''
@@ -307,12 +311,46 @@ class NetworkModel(object):
         alpha_str = str(self.alpha)
         if self.alpha == GLOB.inf :
             alpha_str = "inf"
+        if not(title):
+            title = f"Links={len(self.links)}, users={len(self.users)}, alpha={alpha_str}"
         plt.figure()
         plt.plot(self.plot_rates)
         plt.ylabel("Rate")
         plt.xlabel("Iterations")
-        plt.title(f"Links={len(self.links)}, users={len(self.users)}, alpha={alpha_str}")
+        plt.title(title)
         plt.suptitle(self.model_name)
         plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
 
+    def TSOR(self, user_id, max_packet=1):
+        ''' iterate TSOR from start from user_id until no more packets to route'''
+
+        # max_packet = 6 # TODO remove this
+
+        for u_id,u in self.users.items():
+            u.TSOR0()
+
+        src = self.users[user_id]
+        dst = src.dst
+        total_payoff = 0
+        for i in range(1,max_packet+1):
+            dst.payoff = 0
+            packet = Packet(src=src, dst=dst, next_hop=src, origin=src, type="LCFM",V=src.V, num=i)
+            src.RecivePacket(packet)
+
+            lst = [1]*len(self.users)
+            while sum(lst) > 0: # still handling packets
+                for j, u in enumerate(self.users.values()):
+                    x = u.HandlePacket()
+                    if x:
+                        lst[j] = 1
+                    else:
+                        lst[j] = 0
+
+            disp(f"___________________________  done with packet num {i}, payoff={dst.payoff}  _______________________",color=COLOR.BLUE)
+            total_payoff += dst.payoff
+        if total_payoff/i > GLOB.R:
+            debug = 0
+
+
+        return total_payoff/i
