@@ -216,32 +216,6 @@ def Model_BellmanFord(step, threshold, iterations, alpha=1):
 
     return net_b1,net_b2
 
-def Model_Web(step, threshold, iterations, alpha=1):
-    net_p = GenerateWebModel(capacity=10,rate=2, alpha=alpha)
-    net_p.UpdateLinksLoad()
-    net_p.find_short_path = "Dijkstra"
-    net_p.Show()
-    DoAlgorithm(net_p, name="Primal", step=step, threshold=threshold, iterations=iterations)
-
-    # net_p = GenerateWebModel(capacity=1, alpha=alpha)
-    # net_p.UpdateLinksLoad()
-    # net_p.find_short_path = "Dijkstra"
-    # net_p.Show()
-    # DoAlgorithm(net_p, name="Dual", step=step, threshold=threshold, iterations=iterations)
-
-
-    net_d = GenerateWebModel(capacity=1, alpha=alpha)
-    net_d.UpdateLinksLoad()
-    net_d.find_short_path = "BellmanFord"
-    net_d.Show()
-    DoAlgorithm(net_d, name="Primal", step=step, threshold=threshold, iterations=iterations)
-
-    # net_d = GenerateWebModel(capacity=1, alpha=alpha)
-    # net_d.UpdateLinksLoad()
-    # net_d.find_short_path = "BellmanFord"
-    # net_d.Show()
-    # DoAlgorithm(net_d, name="Dual", step=step, threshold=threshold, iterations=iterations)
-
 '''############## Globals ###############'''
 
 class GLOB(IntFlag):

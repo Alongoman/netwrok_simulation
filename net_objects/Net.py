@@ -41,10 +41,10 @@ class NetworkModel(object):
                 print("{",end="")
                 print(user,end="} ")
             print("")
-            print("link dests: ",end="")
-            for user in link.local_users.values():
-                print("{",end="")
-                print(user,end="} ")
+            # print("link dests: ",end="")
+            # for user in link.local_users.values():
+            #     print("{",end="")
+            #     print(user,end="} ")
             print("\n")
 
     def Connect(self, obj1, obj2):
