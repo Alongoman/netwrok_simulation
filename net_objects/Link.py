@@ -31,7 +31,7 @@ class Link(object):
             src_id = self.src.id
         if self.dst is not None:
             dst_id = self.dst.id
-        return "link {0} | topology {1} <- {0} -> {2} | load: {3}% | total {4} users".format(self.id, src_id, dst_id, round(100*self.load/self.cap,2), len(self.users))
+        return "link {0} | topology {1} <- {0} -> {2} | capacity: {5} , load: {3}% | total {4} users".format(self.id, src_id, dst_id, round(100*self.load/self.cap,2), len(self.users),self.cap)
 
     def Connect(self,obj):
         from net_objects.User import User
@@ -94,9 +94,9 @@ class Link(object):
 
 
     def Penalty(self, x):
-        if self.load > self.cap:
+        # if self.load > self.cap:
             # return x*(((self.load/self.cap)-1)**4)
-            return x*((self.load/self.cap)-1)
+            # return x*(1 + (self.load/self.cap)-1)
         # if x < 0.01:
         #     return 100
         # return 1/x

@@ -9,6 +9,17 @@ from enum import IntFlag
 
 '''############################################ functions ############################################'''
 
+class COLOR:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    ENDC = '\033[0m'
+    CYAN = '\033[96m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 def disp(info):
     if GLOB.print_info:
         print(info)
@@ -159,7 +170,6 @@ def DoAlgorithm(net, name, step=0.01, threshold=0.001, iterations=10**3):
 def Model_Serial(step, threshold, iterations, alpha=1):
     net_p = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
     net_p.UpdateLinksLoad()
-    net_p.Show()
     DoAlgorithm(net_p, name="Primal", step=step, threshold=threshold, iterations=iterations)
     net_p.model_name = f"Serial - Primal | alpha:{alpha}"
 
@@ -172,19 +182,17 @@ def Model_Serial(step, threshold, iterations, alpha=1):
 
 def Model_Dijkstra(step, threshold, iterations, alpha=1):
     # net_d1 = GenerateWebModel(L=GLOB.L, capacity=1, alpha=alpha)
-    net_d1 = GenerateWebModel(rate=0.1, capacity=1, alpha=alpha)
+    net_d1 = GenerateWebModel(rate=0.1, capacity=2, alpha=alpha)
     net_d1.UpdateLinksLoad()
     net_d1.find_short_path = "Dijkstra"
     net_d1.model_name = "Dijkstra - Primal"
-    net_d1.Show()
     DoAlgorithm(net_d1, name="Primal", step=step, threshold=threshold, iterations=iterations)
     net_d1.model_name = f"(Web) Dijkstra - Primal | alpha:{alpha}"
 
     # net_d2 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
-    net_d2 = GenerateWebModel(rate=0.1, capacity=1, alpha=alpha)
+    net_d2 = GenerateWebModel(rate=0.1, capacity=2, alpha=alpha)
     net_d2.UpdateLinksLoad()
     net_d2.find_short_path = "Dijkstra"
-    net_d2.Show()
     DoAlgorithm(net_d2, name="Dual", step=step, threshold=threshold, iterations=iterations)
     net_d2.model_name = f"(Web) Dijkstra - Dual | alpha:{alpha}"
 
@@ -193,18 +201,16 @@ def Model_Dijkstra(step, threshold, iterations, alpha=1):
 def Model_BellmanFord(step, threshold, iterations, alpha=1):
 
     # net_b1 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
-    net_b1 = GenerateWebModel(rate=0.1, capacity=1, alpha=alpha)
+    net_b1 = GenerateWebModel(rate=0.1, capacity=5, alpha=alpha)
     net_b1.UpdateLinksLoad()
     net_b1.find_short_path = "BellmanFord"
-    net_b1.Show()
     DoAlgorithm(net_b1, name="Primal", step=step, threshold=threshold, iterations=iterations)
     net_b1.model_name = f"(Web) BellmanFord - Primal | alpha:{alpha}"
 
     # net_b2 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
-    net_b2 = GenerateWebModel(rate=0.1, capacity=1, alpha=alpha)
+    net_b2 = GenerateWebModel(rate=0.1, capacity=5, alpha=alpha)
     net_b2.UpdateLinksLoad()
     net_b2.find_short_path = "BellmanFord"
-    net_b2.Show()
     DoAlgorithm(net_b2, name="Dual", step=step, threshold=threshold, iterations=iterations)
     net_b2.model_name = f"(Web) BellmanFord - Dual | alpha:{alpha}"
 
@@ -242,22 +248,21 @@ class GLOB(IntFlag):
     inf = 10**3
     print_info = True
     L = 5
-    find_short_path = False
     max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
     zero_th = 0.001 # x < zero_th -> x == 0
 
 
 if __name__ == "__main__":
     step = 0.002
-    threshold = 0.001
-    iterations = 1*10**4
+    threshold = 0.000
+    iterations = 10*10**3
 
 
     net_p1,net_d1 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=1)
     net_p2,net_d2 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=2)
     net_p_inf,net_d_inf = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=GLOB.inf)
     net_p_dijkstra,net_d_dijkstra = Model_Dijkstra(step=step, threshold=threshold, iterations=iterations, alpha=1)
-    net_p_BF,net_d_BF = Model_BellmanFord(step=step, threshold=threshold, iterations=iterations, alpha=1)
+    net_p_BF,net_d_BF = Model_BellmanFord(step=step, threshold=threshold, iterations=iterations, alpha=4)
 
     net_p1.Show()
     net_d1.Show()

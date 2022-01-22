@@ -33,7 +33,7 @@ class NetworkModel(object):
         return f"network model name: '{self.model_name}' with total {len(self.links)} links and {len(self.users)} users"
 
     def Show(self):
-        print(self)
+        disp_color(self,color=COLOR.HEADER)
         for link in self.links.values():
             print(link)
             print("link users: ",end="")
@@ -265,14 +265,17 @@ class NetworkModel(object):
 
     def UpdatePathFromTo(self, user, dst, node_and_cost):
         user.ClearLinks()
+        self.users[user.id].ClearLinks()
         u_id = node_and_cost[dst.id][1]
         link = node_and_cost[dst.id][2]
         if link is None:
             return
         user.Connect(self.links[link])
+        self.users[user.id].Connect(self.links[link])
         while u_id != user.id:
             link = node_and_cost[u_id][2]
             user.Connect(self.links[link])
+            self.users[user.id].Connect(self.links[link])
             u_id = node_and_cost[u_id][1]
 
     def utility(self, x):
