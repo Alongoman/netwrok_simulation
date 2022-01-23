@@ -319,6 +319,9 @@ class NetworkModel(object):
     def TSOR(self, user_id, max_packet=1):
         ''' iterate TSOR from start from user_id until no more packets to route'''
 
+        if max_packet < 1:
+            return 0
+
         for u_id,u in self.users.items():
             u.TSOR0()
 
@@ -345,8 +348,9 @@ class NetworkModel(object):
                 disp_warn("cannot reach destination, stopping to save time.")
                 break
 
-        if total_payoff/i > GLOB.R:
-            debug = 0
+        # if total_payoff/i > GLOB.R:
+        #     debug = 0
 
 
-        return total_payoff/i
+
+        return total_payoff/max_packet

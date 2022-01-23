@@ -14,3 +14,4 @@ net_objects/__pycache__/Packet.cpython-38.pyc
 net_objects/__pycache__/User.cpython-37.pyc
 net_objects/__pycache__/User.cpython-38.pyc
 *.pyc
+*.pyc
