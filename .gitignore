@@ -1,3 +1,15 @@
 
 *.pyc
 *.pyc
+__pycache__/TSOR_sim.cpython-37.pyc
+__pycache__/TSOR_sim.cpython-38.pyc
+net_objects/__pycache__/__init__.cpython-37.pyc
+net_objects/__pycache__/__init__.cpython-38.pyc
+net_objects/__pycache__/Link.cpython-37.pyc
+net_objects/__pycache__/Link.cpython-38.pyc
+net_objects/__pycache__/Net.cpython-37.pyc
+net_objects/__pycache__/Net.cpython-38.pyc
+net_objects/__pycache__/Packet.cpython-37.pyc
+net_objects/__pycache__/Packet.cpython-38.pyc
+net_objects/__pycache__/User.cpython-37.pyc
+net_objects/__pycache__/User.cpython-38.pyc
