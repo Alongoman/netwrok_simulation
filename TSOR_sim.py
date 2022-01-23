@@ -199,28 +199,45 @@ def Model(size=6):
 
     return net_p
 
+def get_time_remained(time_remained):
+    hours = str(time_remained//3600)
+    minutes = str((time_remained%3600)//60)
+    seconds = str(time_remained%60)
+    if len(seconds) == 1:
+        seconds = "0"+seconds
+    if len(minutes) == 1:
+        minutes = "0"+minutes
+    if len(hours) == 1:
+        hours = "0"+hours
+
+    return hours,minutes,seconds
+
 def DoTSOR(size=6, user_id='1'):
     start = time.time()
     print("################")
     print("nodes:")
-    avg_payoff = max_packet_list.copy()
+    avg_payoff = [0]*len(max_packet_list)
     packets = max_packet_list
 
     if load_results:
         with open(load_file, 'r') as f:
             avg_payoff = json.load(f)
     else:
-        for k,p in enumerate(max_packet_list):
-            payoff = 0
-            for l in range(1,iteration_num+1):
-                net = Model(size=size)
-                payoff += net.TSOR(user_id=user_id, max_packet=p)
-                disp_progress(f"______________________________ done {round(100*(k*iteration_num + l)/(len(max_packet_list)*iteration_num),1)}% ______________________________",color=COLOR.HEADER,progress=round(100*(k*iteration_num + l)/(len(max_packet_list)*iteration_num),2))
-            avg_payoff[k] = (round(payoff/l,4))
+        for l in range(iteration_num):
+            for k,p in enumerate(max_packet_list):
+                done_presentage = round(100*(k + l*len(max_packet_list))/(len(max_packet_list)*iteration_num),1) + 1e-5
+                time_remained = int(((time.time()-start)/done_presentage)*(100-done_presentage))
+                hours,minutes,seconds = get_time_remained(time_remained)
+                done_presentage = round(done_presentage,1)
 
-            if k>10 and sum(avg_payoff) == 0:
-                disp(f"links generated with low transmit probability and algo seems to not converged after {k} iterations pleas run again",color=COLOR.RED)
-                return
+                net = Model(size=size)
+                payoff = net.TSOR(user_id=user_id, max_packet=p)
+                disp_progress(f"_____________ ETA {hours}:{minutes}:{seconds} (h:m:s) | {done_presentage}% _____________",color=COLOR.HEADER,progress=done_presentage)
+                avg_payoff[k] += (round(payoff/iteration_num,4))
+
+                if k>10 and sum(avg_payoff) == 0:
+                    disp(f"links generated with low transmit probability and algo seems to not converged after {k} iterations please run again",color=COLOR.RED)
+                    return
 
     if save_results:
         f_name = f"net size {size}, iterations {iteration_num}, max packet count {max_packet_list[-1]}, packet samples {len(max_packet_list)}.json"
@@ -230,8 +247,8 @@ def DoTSOR(size=6, user_id='1'):
 
     end = time.time()
     print(avg_payoff)
-    minutes = int((end-start)/60)
-    secs = int((end-start-(60*minutes)))
+    minutes = (end-start)//60
+    secs = (end-start)%60
     if not minutes:
         time_string = f"{secs} seconds"
     else:
@@ -251,6 +268,7 @@ def DoTSOR(size=6, user_id='1'):
     plt.ylim([0,7])
     plt.show()
 
+    return avg_payoff
 
 
 '''############## Globals ###############'''
@@ -270,7 +288,6 @@ class GLOB(IntFlag):
     max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
     zero_th = 0.001 # x < zero_th -> x == 0
 
-
 class COLOR:
     HEADER = '\033[95m'
     BLUE = '\033[94m'
@@ -282,6 +299,10 @@ class COLOR:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def disp_warn(info,end="\n"):
+    endc = COLOR.ENDC
+    print(f"{COLOR.YELLOW}{info}{endc}",end=end)
+
 def disp_progress(info, end="\n", color="",progress=0):
     endc = COLOR.ENDC
     if not color:
@@ -291,8 +312,7 @@ def disp_progress(info, end="\n", color="",progress=0):
         gap = " "*(100-int(progress))
         progress_bar = "["+passed+gap+"]"
         print ("\033[A                             \033[A")
-        print(f"{color}{info}{' '*(80-len(info))} | {progress_bar}{endc}",end=end)
-
+        print(f"{color}{info}{' '*(60-len(info))}  {progress_bar}{endc}",end=end)
 
 def disp_func(info, end="\n", color=""):
     endc = COLOR.ENDC
@@ -313,14 +333,18 @@ if __name__ == "__main__":
     save_results = False
     load_file = "net size 6, iterations 50, max packet count 1995, packet samples 666.json"
     max_packet_list = [1]
-    max_packet_list += [i*10 for i in range(1,50)]
-    iteration_num = 5
+    # max_packet_list = [1,5,10,50,100,200,300,500]
+    max_packet_list += [10*i for i in range(1,50)]
+    iteration_num = 100
     step = 1
     size = 6
 
 
 
-    DoTSOR(size=size,user_id="1")
+    avg_payoff = DoTSOR(size=size,user_id="1")
+
+    for i,p in enumerate(avg_payoff):
+        print(f"{i}| avg payoff: {p}")
 
 
 

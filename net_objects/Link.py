@@ -19,8 +19,10 @@ class Link(object):
         self.load = 0
         self.local_users = {}
         self.users = {}
-        if transmit_prob == "uniform":
-            transmit_prob = np.random.uniform(0.1,0.9)
+        # if transmit_prob == "uniform":
+        #     transmit_prob = np.random.uniform(0.1,0.9)
+        # self.transmit_prob = transmit_prob
+        transmit_prob = np.random.uniform(0.3,0.9)
         self.transmit_prob = transmit_prob
         self.transmit_rand = np.random.binomial(1, transmit_prob)
         for user in users:
@@ -137,19 +139,19 @@ class Link(object):
 
         packet.Hop()
         if self.transmit_rand:
-            if packet.type in ["ACK","NACK"]:
-                packet.V = packet.src.V
+            # if packet.type in ["ACK","NACK"]:
+            #     packet.V = packet.src.V
             dst.RecivePacket(packet=packet)
             disp(f"{s} PASS: user {dst.id} v={dst.V} || got {packet.type} || from {packet.src.id} || link {self.id} || [{packet}]",color=c)
         else:
-            # for i in range(packet.TTL): # retransmission
-            #     packet.Hop()
-            #     if self.transmit_rand:
+            for i in range(packet.TTL): # retransmission
+                packet.Hop()
+                if self.transmit_rand:
             #         if packet.type in ["ACK","NACK"]:
             #             packet.V = packet.src.V
-            #         dst.RecivePacket(packet=packet)
-            #         disp(f"{s} PASS: user {dst.id} v={dst.V} || got {packet.type} || from {packet.src.id} || link {self.id} || [{packet}]",color=c)
-            #         return
-            # packet.src.RecivePacket(packet=packet)
+                    dst.RecivePacket(packet=packet)
+                    disp(f"{s} PASS: user {dst.id} v={dst.V} || got {packet.type} || from {packet.src.id} || link {self.id} || [{packet}]",color=c)
+                    return
+            packet.src.RecivePacket(packet=packet) # transimition fails, terminate packet at source
 
             disp(f"FAIL: user {dst.id} v={dst.V} || got {packet.type} || from {packet.src.id} || link {self.id} || [{packet}]",color=COLOR.RED)
