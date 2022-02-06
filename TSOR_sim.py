@@ -336,7 +336,7 @@ if __name__ == "__main__":
     # max_packet_list = [1,5,10,50,100,200,300,500]
     max_packet_list += [10*i for i in range(50)]
     iteration_num = 100
-    step = 1]
+    step = 1
     size = 6
 
 
