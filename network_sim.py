@@ -164,7 +164,7 @@ def DoAlgorithm(net, name, step=0.01, threshold=0.001, iterations=10**3):
         print(user)
     print("new network")
     net.Show()
-    net.PlotRates(f"algorithm: {name}")
+    net.PlotRates()#(f"algorithm: {name}")
 
 
 def Model_Serial(step, threshold, iterations, alpha=1):
@@ -278,9 +278,3 @@ if __name__ == "__main__":
     plt.show()
 
 
-
-
-    # net_web = GenerateWebModel(rate=0.1, capacity=10)
-    # net_web.Show()
-    # net_serial = GenerateSerialModel(L=GLOB.L,capacity=1)
-    # net_serial.Show()
