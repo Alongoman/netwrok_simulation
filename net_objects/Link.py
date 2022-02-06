@@ -22,7 +22,7 @@ class Link(object):
         # if transmit_prob == "uniform":
         #     transmit_prob = np.random.uniform(0.1,0.9)
         # self.transmit_prob = transmit_prob
-        transmit_prob = np.random.uniform(0.3,0.9)
+        transmit_prob = np.random.uniform(0.1,0.9)
         self.transmit_prob = transmit_prob
         self.transmit_rand = np.random.binomial(1, transmit_prob)
         for user in users:

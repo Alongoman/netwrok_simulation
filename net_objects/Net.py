@@ -68,11 +68,11 @@ class NetworkModel(object):
         self.neigboors = {}
         for u1 in self.users.values():
             u1.UpdateNeighbors()
-            self.neigboors[u1.id] = {}
-            for u2 in self.users.values():
-                link = u1.GetLink(u2)
-                if link and u2 != u1:
-                    self.neigboors[u1.id][u2.id] = u2
+            self.neigboors[u1.id] = u1.neighbors
+            # for u2 in self.users.values():
+            #     link = u1.GetLink(u2)
+            #     if link and u2 != u1:
+            #         self.neigboors[u1.id][u2.id] = u2
 
     def UpdateLinksLoad(self):
         for link in self.links.values():
