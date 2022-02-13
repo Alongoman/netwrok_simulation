@@ -237,7 +237,7 @@ class User(object):
                 disp(f" user: {self.id} got LCFM for self from: {packet.src.id}")
                 # self.Broadcast(packet=packet,skip=[packet.origin,packet.src])
                 for u in self.neighbors.values():
-                    # u.HandleRecentPacket()
+                    # u.HandleRecentPacket() # to properly simulated the sending, but can also be done with the following lines of code instead
                     link = self.GetLink(u)
                     if link.transmit_rand: # transmited successfully the LCFM
                         if link.transmit_rand: # successfully got LACK:
@@ -337,7 +337,7 @@ class User(object):
             t = self.Beta(self.a[s], self.b[s])
             V += t*next.V
         self.V = min(0, V)
-        self.V = max((GLOB.c -GLOB.R),self.V)
+        # self.V = max((GLOB.c -GLOB.R),self.V)
 
     def UpdateBetaParams(self, s):
         ''' equation number 5 in article '''

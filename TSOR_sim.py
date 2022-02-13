@@ -22,6 +22,7 @@ def combs(xs, i=0):
         yield c+(xs[i],)
 
 def get_combs(iters):
+    '''used to get all permotations of elements in list'''
     x = list(combs(iters))
     lst = sorted(x)
     res = set()
@@ -189,6 +190,7 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
     return net
 
 def Model(size=6):
+    '''generate the wirless networks as described in the article'''
     if size == 6:
         net_p = GenerateSmallWirelessModel(capacity=1,rate=1, alpha=GLOB.alpha)
 
@@ -213,6 +215,11 @@ def get_time_remained(time_remained):
     return hours,minutes,seconds
 
 def DoTSOR(size=6, user_id='1'):
+    '''
+    this will run the TSOR algorithm for N iterations.
+    each iteration, new link probability are generated as described in the TSOR article
+    '''
+
     start = time.time()
     print("################")
     print("nodes:")
@@ -223,21 +230,18 @@ def DoTSOR(size=6, user_id='1'):
         with open(load_file, 'r') as f:
             avg_payoff = json.load(f)
     else:
+        net = Model(size=size)
         for l in range(iteration_num):
+            # net = Model(size=size)
             for k,p in enumerate(max_packet_list):
                 done_presentage = round(100*(k + l*len(max_packet_list))/(len(max_packet_list)*iteration_num),1) + 1e-5
                 time_remained = int(((time.time()-start)/done_presentage)*(100-done_presentage))
                 hours,minutes,seconds = get_time_remained(time_remained)
                 done_presentage = round(done_presentage,1)
 
-                net = Model(size=size)
                 payoff = net.TSOR(user_id=user_id, max_packet=p)
                 disp_progress(f"_____________ ETA {hours}:{minutes}:{seconds} (h:m:s) | {done_presentage}% _____________",color=COLOR.HEADER,progress=done_presentage)
                 avg_payoff[k] += (round(payoff/iteration_num,4))
-
-                if k>10 and sum(avg_payoff) == 0:
-                    disp(f"links generated with low transmit probability and algo seems to not converged after {k} iterations please run again",color=COLOR.RED)
-                    return
 
     if save_results:
         f_name = f"net size {size}, iterations {iteration_num}, max packet count {max_packet_list[-1]}, packet samples {len(max_packet_list)}.json"
@@ -329,14 +333,22 @@ def disp(info,end="\n", color=""):
         print(f"{color}{info}{endc}",end=end)
 
 if __name__ == "__main__":
+    # print("choose packet count range")
+    # start = int(input("start number: "))
+    # stop = int(input("stop number: "))
+    # step = int(input("step size: "))
+    # iteration_num = int(input("iteration number: "))
+
+    start = 0
+    stop = 1500
+    step = 15
+    iteration_num = 100
+
     load_results = False
     save_results = False
     load_file = "net size 6, iterations 50, max packet count 1995, packet samples 666.json"
-    max_packet_list = []
     # max_packet_list = [1,5,10,50,100,200,300,500]
-    max_packet_list += [10*i for i in range(50)]
-    iteration_num = 100
-    step = 1
+    max_packet_list = [i for i in range(start, stop, step)]
     size = 6
 
 

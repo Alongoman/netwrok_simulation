@@ -345,7 +345,7 @@ class NetworkModel(object):
             disp(f"___________________________  done with packet num {i}, payoff={dst.payoff}  _______________________",color=COLOR.BLUE)
             total_payoff += dst.payoff
             if (total_payoff == 0) and (i > 10):
-                disp_warn("cannot reach destination, stopping to save time.")
+                disp_warn("cannot reach destination, skip iteration for efficiency.")
                 break
 
         # if total_payoff/i > GLOB.R:
@@ -354,3 +354,4 @@ class NetworkModel(object):
 
 
         return total_payoff/max_packet
+
