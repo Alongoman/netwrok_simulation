@@ -224,15 +224,15 @@ def DoTSOR(size=6, user_id='1'):
     print("################")
     print("nodes:")
     avg_payoff = [0]*len(max_packet_list)
+    avg_regret = [GLOB.opt_payoff]*len(max_packet_list)
     packets = max_packet_list
 
     if load_results:
         with open(load_file, 'r') as f:
             avg_payoff = json.load(f)
     else:
-        net = Model(size=size)
         for l in range(iteration_num):
-            # net = Model(size=size)
+            net = Model(size=size)
             for k,p in enumerate(max_packet_list):
                 done_presentage = round(100*(k + l*len(max_packet_list))/(len(max_packet_list)*iteration_num),1) + 1e-5
                 time_remained = int(((time.time()-start)/done_presentage)*(100-done_presentage))
@@ -243,6 +243,9 @@ def DoTSOR(size=6, user_id='1'):
                 disp_progress(f"_____________ ETA {hours}:{minutes}:{seconds} (h:m:s) | {done_presentage}% _____________",color=COLOR.HEADER,progress=done_presentage)
                 avg_payoff[k] += (round(payoff/iteration_num,4))
 
+    for k,p in enumerate(avg_payoff):
+        avg_regret[k] -= p
+
     if save_results:
         f_name = f"net size {size}, iterations {iteration_num}, max packet count {max_packet_list[-1]}, packet samples {len(max_packet_list)}.json"
         with open(f_name, 'w') as f:
@@ -251,6 +254,7 @@ def DoTSOR(size=6, user_id='1'):
 
     end = time.time()
     print(avg_payoff)
+    print(avg_regret)
     minutes = (end-start)//60
     secs = (end-start)%60
     if not minutes:
@@ -260,16 +264,31 @@ def DoTSOR(size=6, user_id='1'):
             secs = f"0{secs}"
         time_string = f"{minutes}:{secs} minutes"
 
-    plt_title = f"Average Payoff, net size={size} iterations={iteration_num}"
-    if not load_file:
-        plt_title += f", took {time_string}"
+    plt_suptitle = f"Average Payoff"
+    plt_title = f"Net size={size} iterations={iteration_num}"
     disp(f"time passed: {time_string}",color=COLOR.BLUE)
     plt.figure()
-    plt.plot(packets,avg_payoff)
+    plt.plot(packets,avg_payoff, label="average payoff", color="orange")
+    plt.legend()
     plt.title(plt_title)
+    plt.suptitle(plt_suptitle)
     plt.xlabel("Number of Packets")
     plt.ylabel("Average Payoff")
+    plt.ylim([0,8])
+
+    plt_suptitle = f"Average Regret"
+    plt_title = f"Net size={size} iterations={iteration_num}"
+    disp(f"time passed: {time_string}",color=COLOR.BLUE)
+    plt.figure()
+    plt.plot(packets,avg_regret, label="average regret")
+    plt.legend()
+    plt.title(plt_title)
+    plt.suptitle(plt_suptitle)
+    plt.xlabel("Number of Packets")
+    plt.ylabel("Average Regret")
     plt.ylim([0,7])
+    plt.show()
+
     plt.show()
 
     return avg_payoff
@@ -279,6 +298,7 @@ def DoTSOR(size=6, user_id='1'):
 
 class GLOB(IntFlag):
     R = 10
+    opt_payoff = 6.2
     c = 1
     N = 6
     TTL = 6
@@ -345,8 +365,8 @@ if __name__ == "__main__":
     iteration_num = 100
 
     load_results = False
-    save_results = False
-    load_file = "net size 6, iterations 50, max packet count 1995, packet samples 666.json"
+    save_results = True
+    load_file = "net size 6, iterations 100, max packet count 1485, packet samples 100.json"
     # max_packet_list = [1,5,10,50,100,200,300,500]
     max_packet_list = [i for i in range(start, stop, step)]
     size = 6
@@ -354,9 +374,6 @@ if __name__ == "__main__":
 
 
     avg_payoff = DoTSOR(size=size,user_id="1")
-
-    for i,p in enumerate(avg_payoff):
-        print(f"{i}| avg payoff: {p}")
 
 
 
