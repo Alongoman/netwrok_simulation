@@ -305,7 +305,7 @@ class GLOB(IntFlag):
     inf = 10**3
     alpha = 1
     print_progress = True
-    print_info = False
+    print_info = True
     print_func = False
     L = 5
     find_short_path = False
@@ -353,25 +353,22 @@ def disp(info,end="\n", color=""):
         print(f"{color}{info}{endc}",end=end)
 
 if __name__ == "__main__":
-    # print("choose packet count range")
-    # start = int(input("start number: "))
-    # stop = int(input("stop number: "))
-    # step = int(input("step size: "))
-    # iteration_num = int(input("iteration number: "))
+    print("choose packet count range")
+    start = int(input("start number: "))
+    stop = int(input("stop number: "))
+    step = int(input("step size: "))
+    iteration_num = int(input("iteration number: "))
 
-    start = 0
-    stop = 1500
-    step = 15
-    iteration_num = 100
+    # start = 0
+    # stop = 1500
+    # step = 15
+    # iteration_num = 100
 
     load_results = False
     save_results = True
     load_file = "net size 6, iterations 100, max packet count 1485, packet samples 100.json"
-    # max_packet_list = [1,5,10,50,100,200,300,500]
     max_packet_list = [i for i in range(start, stop, step)]
     size = 6
-
-
 
     avg_payoff = DoTSOR(size=size,user_id="1")
 
