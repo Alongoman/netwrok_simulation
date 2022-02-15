@@ -37,6 +37,32 @@ def GetRatesDiff(rates1, rates2):
         diff[idx] = abs(rates1[idx] - rates2[idx])
     return diff
 
+def Model_Web(step, threshold, iterations, alpha=1):
+    net_p = GenerateWebModel(capacity=10,rate=2, alpha=alpha)
+    net_p.UpdateLinksLoad()
+    net_p.find_short_path = "Dijkstra"
+    net_p.Show()
+    DoAlgorithm(net_p, name="Primal", step=step, threshold=threshold, iterations=iterations)
+
+    net_p = GenerateWebModel(capacity=1, alpha=alpha)
+    net_p.UpdateLinksLoad()
+    net_p.find_short_path = "Dijkstra"
+    net_p.Show()
+    DoAlgorithm(net_p, name="Dual", step=step, threshold=threshold, iterations=iterations)
+
+
+    net_d = GenerateWebModel(capacity=1, alpha=alpha)
+    net_d.UpdateLinksLoad()
+    net_d.find_short_path = "BellmanFord"
+    net_d.Show()
+    DoAlgorithm(net_d, name="Primal", step=step, threshold=threshold, iterations=iterations)
+
+    net_d = GenerateWebModel(capacity=1, alpha=alpha)
+    net_d.UpdateLinksLoad()
+    net_d.find_short_path = "BellmanFord"
+    net_d.Show()
+    DoAlgorithm(net_d, name="Dual", step=step, threshold=threshold, iterations=iterations)
+
 def GenerateSerialModel(L, capacity=1, alpha=1):
     '''
     total L link and L+1 sources, first source transmit to last source and each other source transmit to next source
@@ -164,83 +190,67 @@ def DoAlgorithm(net, name, step=0.01, threshold=0.001, iterations=10**3):
         print(user)
     print("new network")
     net.Show()
-    net.PlotRates()#(f"algorithm: {name}")
 
 
 def Model_Serial(step, threshold, iterations, alpha=1):
     net_p = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
     net_p.UpdateLinksLoad()
     DoAlgorithm(net_p, name="Primal", step=step, threshold=threshold, iterations=iterations)
-    net_p.model_name = f"Serial - Primal | alpha:{alpha}"
+    net_p.model_name = f"Serial - Primal"
 
     net_d = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
     net_d.UpdateLinksLoad()
     DoAlgorithm(net_d, name="Dual", step=step, threshold=threshold, iterations=iterations)
-    net_d.model_name = f"Serial - Dual | alpha:{alpha}"
+    net_d.model_name = f"Serial - Dual"
 
     return net_p,net_d
 
 def Model_Dijkstra(step, threshold, iterations, alpha=1):
-    # net_d1 = GenerateWebModel(L=GLOB.L, capacity=1, alpha=alpha)
+    '''model network rates update but find shortest path with dijkstra first'''
     net_d1 = GenerateWebModel(rate=0.1, capacity=2, alpha=alpha)
     net_d1.UpdateLinksLoad()
-    net_d1.find_short_path = "Dijkstra"
-    net_d1.model_name = "Dijkstra - Primal"
-    DoAlgorithm(net_d1, name="Primal", step=step, threshold=threshold, iterations=iterations)
-    net_d1.model_name = f"(Web) Dijkstra - Primal | alpha:{alpha}"
 
-    # net_d2 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
+    net_d1.find_short_path = "Dijkstra"
+    net_d1.UpdateAllPaths()
+
+    DoAlgorithm(net_d1, name="Primal", step=step, threshold=threshold, iterations=iterations)
+    net_d1.model_name = f"(Web) Dijkstra - Primal"
+
+
     net_d2 = GenerateWebModel(rate=0.1, capacity=2, alpha=alpha)
     net_d2.UpdateLinksLoad()
+
     net_d2.find_short_path = "Dijkstra"
+    net_d2.UpdateAllPaths()
+
     DoAlgorithm(net_d2, name="Dual", step=step, threshold=threshold, iterations=iterations)
-    net_d2.model_name = f"(Web) Dijkstra - Dual | alpha:{alpha}"
+    net_d2.model_name = f"(Web) Dijkstra - Dual"
 
     return net_d1,net_d2
 
 def Model_BellmanFord(step, threshold, iterations, alpha=1):
-
-    # net_b1 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
+    '''model network rates update but find shortest path with bellman-ford first'''
     net_b1 = GenerateWebModel(rate=0.1, capacity=5, alpha=alpha)
     net_b1.UpdateLinksLoad()
-    net_b1.find_short_path = "BellmanFord"
-    DoAlgorithm(net_b1, name="Primal", step=step, threshold=threshold, iterations=iterations)
-    net_b1.model_name = f"(Web) BellmanFord - Primal | alpha:{alpha}"
 
-    # net_b2 = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
+    net_b1.find_short_path = "BellmanFord"
+    net_b1.UpdateAllPaths()
+
+    DoAlgorithm(net_b1, name="Primal", step=step, threshold=threshold, iterations=iterations)
+    net_b1.model_name = f"(Web) BellmanFord - Primal"
+
+
     net_b2 = GenerateWebModel(rate=0.1, capacity=5, alpha=alpha)
     net_b2.UpdateLinksLoad()
+
     net_b2.find_short_path = "BellmanFord"
+    net_b2.UpdateAllPaths()
+
     DoAlgorithm(net_b2, name="Dual", step=step, threshold=threshold, iterations=iterations)
-    net_b2.model_name = f"(Web) BellmanFord - Dual | alpha:{alpha}"
+    net_b2.model_name = f"(Web) BellmanFord - Dual"
 
     return net_b1,net_b2
 
-def Model_Web(step, threshold, iterations, alpha=1):
-    net_p = GenerateWebModel(capacity=10,rate=2, alpha=alpha)
-    net_p.UpdateLinksLoad()
-    net_p.find_short_path = "Dijkstra"
-    net_p.Show()
-    DoAlgorithm(net_p, name="Primal", step=step, threshold=threshold, iterations=iterations)
-
-    # net_p = GenerateWebModel(capacity=1, alpha=alpha)
-    # net_p.UpdateLinksLoad()
-    # net_p.find_short_path = "Dijkstra"
-    # net_p.Show()
-    # DoAlgorithm(net_p, name="Dual", step=step, threshold=threshold, iterations=iterations)
-
-
-    net_d = GenerateWebModel(capacity=1, alpha=alpha)
-    net_d.UpdateLinksLoad()
-    net_d.find_short_path = "BellmanFord"
-    net_d.Show()
-    DoAlgorithm(net_d, name="Primal", step=step, threshold=threshold, iterations=iterations)
-
-    # net_d = GenerateWebModel(capacity=1, alpha=alpha)
-    # net_d.UpdateLinksLoad()
-    # net_d.find_short_path = "BellmanFord"
-    # net_d.Show()
-    # DoAlgorithm(net_d, name="Dual", step=step, threshold=threshold, iterations=iterations)
 
 '''############## Globals ###############'''
 
@@ -265,15 +275,25 @@ if __name__ == "__main__":
     net_p_BF,net_d_BF = Model_BellmanFord(step=step, threshold=threshold, iterations=iterations, alpha=4)
 
     net_p1.Show()
+    net_p1.PlotRates()
     net_d1.Show()
+    net_d1.PlotRates()
     net_p2.Show()
+    net_p2.PlotRates()
     net_d2.Show()
+    net_d2.PlotRates()
     net_p_inf.Show()
+    net_p_inf.PlotRates()
     net_d_inf.Show()
+    net_d_inf.PlotRates()
     net_p_dijkstra.Show()
+    net_p_dijkstra.PlotRates()
     net_d_dijkstra.Show()
+    net_d_dijkstra.PlotRates()
     net_p_BF.Show()
+    net_p_BF.PlotRates()
     net_d_BF.Show()
+    net_d_BF.PlotRates()
 
     plt.show()
 

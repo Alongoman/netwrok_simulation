@@ -100,10 +100,10 @@ class NetworkModel(object):
             user = random.choice(list(self.users.values()))
         x = user.rate
         disp("user {} rate {}".format(user.id, x))
-        if self.find_short_path:
-            self.model_name = f"Primal-{self.find_short_path}"
-            disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
-            self.UpdatePath(user)
+        # if self.find_short_path:
+        #     self.model_name = f"Primal-{self.find_short_path}"
+        #     disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
+        #     self.UpdatePath(user)
 
         x_t = x + (step*(self.utility_tag(x) - user.GetRouteCost()))
         if x_t < 0:
@@ -141,10 +141,10 @@ class NetworkModel(object):
         while user.dst is None:
             user = random.choice(list(self.users.values()))
         disp("user {} rate {}".format(user.id, user.rate))
-        if self.find_short_path:
-            self.model_name = f"Dual-{self.find_short_path}"
-            disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
-            self.UpdatePath(user)
+        # if self.find_short_path:
+        #     self.model_name = f"Dual-{self.find_short_path}"
+        #     disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
+        #     self.UpdatePath(user)
 
         x_t = self.inv_utility_tag(user.GetRouteLagrange())
         if x_t < 0:
@@ -253,6 +253,14 @@ class NetworkModel(object):
             next_nodes = []
 
         return node_and_cost
+
+    def UpdateAllPaths(self, type=None):
+        if type is None:
+            type = self.find_short_path
+        disp(f"finding 'shortest' path first, algorithm: {type}")
+        for u_id, user in self.users.items():
+            self.UpdatePath(user=user, type=type)
+
 
     def UpdatePath(self, user, type=None):
         ''' update shortest path - dijkstra / bellman-ford'''
