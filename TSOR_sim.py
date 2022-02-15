@@ -311,7 +311,7 @@ def disp(info,end="\n", color=""):
 if __name__ == "__main__":
     load_results = False
     save_results = False
-    load_file = "net size 6, iterations 50, max packet count 1995, packet samples 666.json"
+    load_file = "TSOR_results/net size 6, iterations 50, max packet count 1995, packet samples 666.json"
     max_packet_list = [1]
     max_packet_list += [i*10 for i in range(1,100)]
     iteration_num = 50

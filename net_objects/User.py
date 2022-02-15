@@ -81,8 +81,8 @@ class User(object):
         link.DelUser(self)
 
     def AddLocalLink(self, link):
-
         self.local_links[link.id] = link
+        link.local_users[self.id] = self
 
     def DelLocalLink(self, link):
         try:

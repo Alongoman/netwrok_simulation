@@ -15,9 +15,10 @@ class NetworkModel(object):
     '''
     model of the network, alpha is the fairness parameter >= 0
     '''
-    def __init__(self, name, alpha=1, links={}, users={}):
+    def __init__(self, name, alpha=1, links={}, users={}, topology=""):
         self.name = name
         self.model_name = ""
+        self.topology = topology
         self.alpha = alpha
         self.links = {}
         self.users = {}
@@ -32,7 +33,7 @@ class NetworkModel(object):
         self.find_short_path = False
 
     def __str__(self):
-        return f"network model name: '{self.model_name}' with total {len(self.links)} links and {len(self.users)} users"
+        return f"network model name: '{self.model_name}' with total {len(self.links)} links and {len(self.users)} users | topology: {self.topology}"
 
     def GetNumberOfUsers(self):
         return len(self.users)
@@ -325,15 +326,12 @@ class NetworkModel(object):
         plt.ylabel("Rate")
         plt.xlabel("Iterations")
         plt.title(title)
-        plt.suptitle(self.model_name)
+        plt.suptitle(f"topology: {self.topology} | model: {self.model_name}")
         plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
 
     def TSOR(self, user_id, max_packet=1):
         ''' iterate TSOR from start from user_id until no more packets to route'''
-
-        # max_packet = 6 # TODO remove this
-
         for u_id,u in self.users.items():
             u.TSOR0()
 
