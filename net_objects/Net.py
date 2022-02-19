@@ -268,6 +268,8 @@ class NetworkModel(object):
         if type is None:
             type = self.find_short_path
         dst = user.dst
+        if not dst:
+            return
         if type == "Dijkstra":
             node_and_cost = self.UpdateRouteDijkstra(user)
             self.UpdatePathFromTo(user, dst, node_and_cost)

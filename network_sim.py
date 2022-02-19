@@ -179,87 +179,96 @@ def GenerateWebModel(capacity=1, rate=1, alpha=1):
 
     return net
 
+def GetCostumeUsers():
+    '''get users from input'''
+    from net_objects.User import User
 
-def GenerateCostumeModel(users, links, alpha=1):
+    users = {}
+    users_dst = {}
+    print("choose users with this structure:")
+    print("ID,destination_ID(use '-' for no destination),rate")
+    flag = input("enter new user? [y/n]: ")
+    u_num = 0
+    while flag == "y":
+        in_user = input("new user (ID,destination_ID,rate) : ")
+        user = in_user.split(",")
+        id = user[0]
+        dst = user[1]
+        rate = int(user[2])
+        if dst == "-":
+            dst = None
+        if dst:
+            users_dst[id] = dst
+        users[id] = User(id=id, rate=rate, num=u_num)
+        u_num += 1
+        print()
+        flag = input("enter new user? [y/n]: ")
+
+    return users, users_dst
+
+def GetCostumeLinks():
+    '''get links from input'''
+    from net_objects.Link import Link
+
+    links = {}
+    links_local_users = {}
+    print("choose links with this structure:")
+    print("ID,capacity,all connected users i.e. [1|4|7|5]")
+    flag = input("enter new link? [y/n]: ")
+    while flag == "y":
+        in_link = input("new link (ID,capacity,[connected users]) : ")
+        link = in_link.split(",")
+        id = link[0]
+        cap = int(link[1])
+        links_local_users[id] = link[2][1:-1].split("|")
+        links[id] = Link(id=id, capacity=cap)
+        print()
+        flag = input("enter new link? [y/n]: ")
+
+    return links, links_local_users
+
+def GenerateCostumeModel():
     '''user made model, users/link are list of tuples with all relevant information'''
     from net_objects.Net import NetworkModel
-    from net_objects.Link import Link
-    from net_objects.User import User
+
+    alpha = int(input("choose alpha > 0. alpha = ? : "))
+    users, users_dst = GetCostumeUsers()
+    print()
+    print("_____________________________________")
+    print()
+    links, links_local_users = GetCostumeLinks()
     L = len(links)
     U = len(users)
     net = NetworkModel(name="user made model (from class)", alpha=alpha, topology="costume")
     print("building model named '{}'".format(net.name))
     print("generating {} links and {} users".format(L,U))
 
-    net.users['a'] = User(id='a', rate=rate, num=0)
-    net.users['b'] = User(id='b', rate=rate, num=1)
-    net.users['c'] = User(id='c', rate=rate, num=2)
-    net.users['d'] = User(id='d', rate=rate, num=3)
-    net.users['e'] = User(id='e', rate=rate, num=4)
-    net.users['f'] = User(id='f', rate=rate, num=5)
+    net.users = users
+    net.links = links
 
-    net.users['a'].Connect(net.users['f'])
-    net.users['b'].Connect(net.users['d'])
-    net.users['c'].Connect(net.users['e'])
-    net.users['d'].Connect(net.users['c'])
-    net.users['e'].Connect(net.users['a'])
-    net.users['f'].Connect(net.users['d'])
+    for u_id,dst_id in users_dst.items():
+        dst = net.users[dst_id]
+        user = net.users[u_id]
+        if user and dst:
+            net.Connect(user,dst)
 
-    net.links['ab'] = Link(id='ab', capacity=capacity)
-    net.links['ab'].AddLocalUser(net.users['a'])
-    net.links['ab'].AddLocalUser(net.users['b'])
-    net.links['ad'] = Link(id='ad', capacity=capacity)
-    net.links['ad'].AddLocalUser(net.users['a'])
-    net.links['ad'].AddLocalUser(net.users['d'])
-    net.links['db'] = Link(id='db', capacity=capacity)
-    net.links['db'].AddLocalUser(net.users['d'])
-    net.links['db'].AddLocalUser(net.users['b'])
-    net.links['bc'] = Link(id='bc', capacity=capacity)
-    net.links['bc'].AddLocalUser(net.users['b'])
-    net.links['bc'].AddLocalUser(net.users['c'])
-    net.links['de'] = Link(id='de', capacity=capacity)
-    net.links['de'].AddLocalUser(net.users['d'])
-    net.links['de'].AddLocalUser(net.users['e'])
-    net.links['be'] = Link(id='be', capacity=capacity)
-    net.links['be'].AddLocalUser(net.users['b'])
-    net.links['be'].AddLocalUser(net.users['e'])
-    net.links['cf'] = Link(id='cf', capacity=capacity)
-    net.links['cf'].AddLocalUser(net.users['c'])
-    net.links['cf'].AddLocalUser(net.users['f'])
-    net.links['ef'] = Link(id='ef', capacity=capacity)
-    net.links['ef'].AddLocalUser(net.users['e'])
-    net.links['ef'].AddLocalUser(net.users['f'])
-
-    # net.users['a'].AddLocalLink(net.links['ab'])
-    # net.users['a'].AddLocalLink(net.links['ad'])
-    # net.users['b'].AddLocalLink(net.links['ab'])
-    # net.users['b'].AddLocalLink(net.links['bc'])
-    # net.users['b'].AddLocalLink(net.links['db'])
-    # net.users['b'].AddLocalLink(net.links['be'])
-    # net.users['c'].AddLocalLink(net.links['bc'])
-    # net.users['c'].AddLocalLink(net.links['cf'])
-    # net.users['d'].AddLocalLink(net.links['ad'])
-    # net.users['d'].AddLocalLink(net.links['db'])
-    # net.users['d'].AddLocalLink(net.links['de'])
-    # net.users['e'].AddLocalLink(net.links['be'])
-    # net.users['e'].AddLocalLink(net.links['de'])
-    # net.users['e'].AddLocalLink(net.links['ef'])
-    # net.users['f'].AddLocalLink(net.links['cf'])
-    # net.users['f'].AddLocalLink(net.links['ef'])
-
-
-    # class example
-    net.links['ab'].cost = 3
-    net.links['ad'].cost = 2
-    net.links['db'].cost = 1
-    net.links['de'].cost = 4
-    net.links['bc'].cost = 2
-    net.links['be'].cost = 1
-    net.links['cf'].cost = 2
-    net.links['ef'].cost = 2
+    for l_id,vals in links_local_users.items():
+        for u_id in vals:
+            net.links[l_id].AddLocalUser(users[u_id])
 
     net.MapNeighboors()
+    net.find_short_path = "Dijkstra"
+    net.UpdateAllPaths()
 
+    print()
+    print("the network that generated:")
+    net.Show()
+    print()
+    print("_____________________________________")
+    print()
+    proceed = input("would you like to proceed with this network? [y/n]: ")
+    if proceed != "y":
+        exit(1)
     return net
 
 
@@ -276,7 +285,7 @@ def DoAlgorithm(net, name, step=0.01, threshold=0.001, iterations=10**3):
     net.Show()
 
 
-def Model_Serial(step, threshold, iterations, alpha=1, net=None):
+def Model_PrimalDual(step, threshold, iterations, alpha=1, net=None):
     if not net:
         net_p = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
     else:
@@ -284,7 +293,7 @@ def Model_Serial(step, threshold, iterations, alpha=1, net=None):
 
     net_p.UpdateLinksLoad()
     DoAlgorithm(net_p, name="Primal", step=step, threshold=threshold, iterations=iterations)
-    net_p.model_name = f"Serial - Primal"
+    net_p.model_name += f" - Primal"
 
     if not net:
         net_d = GenerateSerialModel(L=GLOB.L, capacity=1, alpha=alpha)
@@ -293,7 +302,7 @@ def Model_Serial(step, threshold, iterations, alpha=1, net=None):
 
     net_d.UpdateLinksLoad()
     DoAlgorithm(net_d, name="Dual", step=step, threshold=threshold, iterations=iterations)
-    net_d.model_name = f"Serial - Dual"
+    net_d.model_name += f" - Dual"
 
     return net_p,net_d
 
@@ -377,8 +386,7 @@ if __name__ == "__main__":
     costume_net = None
     costume_topo = input("generate costume topology [y/n] ?: ")
     if costume_topo == "y":
-        x=3
-        # TODO add here auto link and user input generator
+        costume_net = GenerateCostumeModel()
 
 
     print("enter question number to solve from {4,5,6}. if you want more than 1 then you can enter: '4,6'")
@@ -391,19 +399,19 @@ if __name__ == "__main__":
     print(f"solving questions: {questions}")
 
     if 4 in questions:
-        net_p1,net_d1 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=1, net=costume_net)
+        net_p1,net_d1 = Model_PrimalDual(step=step, threshold=threshold, iterations=iterations, alpha=1, net=costume_net)
         net_p1.Show()
         net_p1.PlotRates()
         net_d1.Show()
         net_d1.PlotRates()
 
-        net_p2,net_d2 = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=2, net=costume_net)
+        net_p2,net_d2 = Model_PrimalDual(step=step, threshold=threshold, iterations=iterations, alpha=2, net=costume_net)
         net_p2.Show()
         net_p2.PlotRates()
         net_d2.Show()
         net_d2.PlotRates()
 
-        net_p_inf,net_d_inf = Model_Serial(step=step, threshold=threshold, iterations=iterations, alpha=GLOB.inf, net=costume_net)
+        net_p_inf,net_d_inf = Model_PrimalDual(step=step, threshold=threshold, iterations=iterations, alpha=GLOB.inf, net=costume_net)
         net_p_inf.Show()
         net_p_inf.PlotRates()
         net_d_inf.Show()
