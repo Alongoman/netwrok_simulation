@@ -98,8 +98,8 @@ class Link(object):
         self.cost = 0
         for user in self.users.values():
             self.cost += self.Penalty(user.rate)
-        # if self.load > self.cap:
-        #     self.cost += ((self.load/self.cap)-1)**2
+        if self.load > self.cap:
+            self.cost += ((self.load/self.cap)-1)*2
 
 
     def Penalty(self, x):

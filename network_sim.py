@@ -390,6 +390,9 @@ if __name__ == "__main__":
 
 
     print("enter question number to solve from {4,5,6}. if you want more than 1 then you can enter: '4,6'")
+    print("question 4: Primal and Dual algorithm")
+    print("question 5: find shortest path using Dijkstra then do 4")
+    print("question 6: find shortest path using Bellman-Ford then do 4")
     question = input("solve question number: ")
     questions = set()
     q_tmp = question.split(',')
