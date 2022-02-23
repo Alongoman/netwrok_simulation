@@ -296,22 +296,6 @@ def DoTSOR(size=6, user_id='1'):
 
 '''############## Globals ###############'''
 
-class GLOB(IntFlag):
-    R = 10
-    opt_payoff = 6.2
-    c = 1
-    N = 6
-    TTL = 6
-    inf = 10**3
-    alpha = 1
-    print_progress = True
-    print_info = True
-    print_func = False
-    L = 5
-    find_short_path = False
-    max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
-    zero_th = 0.001 # x < zero_th -> x == 0
-
 class COLOR:
     HEADER = '\033[95m'
     BLUE = '\033[94m'
@@ -352,17 +336,29 @@ def disp(info,end="\n", color=""):
     if GLOB.print_info:
         print(f"{color}{info}{endc}",end=end)
 
+class GLOB(IntFlag):
+    R = 10
+    opt_payoff = 6.2
+    c = 1
+    N = 6
+    TTL = 6
+    inf = 10**3
+    alpha = 1
+    L = 5
+    find_short_path = False
+    max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
+    zero_th = 0.001 # x < zero_th -> x == 0
+
+    print_func = False
+    print_progress = True
+    print_info = False
+
 if __name__ == "__main__":
     print("choose packet count range")
     start = int(input("start number: "))
     stop = int(input("stop number: "))
     step = int(input("step size: "))
     iteration_num = int(input("iteration number: "))
-
-    # start = 0
-    # stop = 1500
-    # step = 15
-    # iteration_num = 100
 
     load_results = False
     save_results = True
