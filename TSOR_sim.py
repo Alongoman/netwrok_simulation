@@ -4,9 +4,9 @@ TSOR simulation
 '''
 
 import matplotlib.pyplot as plt
-from enum import IntFlag
 import time
 import json
+from GLOB import GLOB, COLOR
 
 
 '''############################################ functions ############################################'''
@@ -294,18 +294,7 @@ def DoTSOR(size=6, user_id='1'):
     return avg_payoff
 
 
-'''############## Globals ###############'''
 
-class COLOR:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    ENDC = '\033[0m'
-    CYAN = '\033[96m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 def disp_warn(info,end="\n"):
     endc = COLOR.ENDC
@@ -336,22 +325,6 @@ def disp(info,end="\n", color=""):
     if GLOB.print_info:
         print(f"{color}{info}{endc}",end=end)
 
-class GLOB(IntFlag):
-    R = 10
-    opt_payoff = 6.2
-    c = 1
-    N = 6
-    TTL = 6
-    inf = 10**3
-    alpha = 1
-    L = 5
-    find_short_path = False
-    max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
-    zero_th = 0.001 # x < zero_th -> x == 0
-
-    print_func = False
-    print_progress = True
-    print_info = False
 
 if __name__ == "__main__":
     print("choose packet count range")
@@ -362,7 +335,7 @@ if __name__ == "__main__":
 
     load_results = False
     save_results = True
-    load_file = "net size 6, iterations 100, max packet count 1485, packet samples 100.json"
+    load_file = "TSOR_results/net size 6, iterations 100, max packet count 1485, packet samples 100.json"
     max_packet_list = [i for i in range(start, stop, step)]
     size = 6
 

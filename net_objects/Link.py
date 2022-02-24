@@ -6,6 +6,7 @@ network net_objects
 from network_sim import *
 from TSOR_sim import *
 import numpy as np
+from GLOB import GLOB, COLOR
 
 
 class Link(object):
