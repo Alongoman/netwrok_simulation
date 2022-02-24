@@ -21,7 +21,7 @@ class GLOB(IntFlag):
     print_progress = True
 
     ''' Change this field to see the Packet path '''
-    print_info = True
+    print_info = False
 
 
 class COLOR:
