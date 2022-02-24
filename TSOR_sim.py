@@ -334,7 +334,7 @@ if __name__ == "__main__":
     iteration_num = int(input("iteration number: "))
 
     load_results = False
-    save_results = True
+    save_results = False
     load_file = "TSOR_results/net size 6, iterations 100, max packet count 1485, packet samples 100.json"
     max_packet_list = [i for i in range(start, stop, step)]
     size = 6
