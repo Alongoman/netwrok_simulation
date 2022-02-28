@@ -6,86 +6,8 @@ TSOR simulation
 import matplotlib.pyplot as plt
 import time
 import json
-from GLOB import GLOB, COLOR
+from utils import *
 
-
-'''############################################ functions ############################################'''
-
-
-
-def combs(xs, i=0):
-    if i==len(xs):
-        yield ()
-        return
-    for c in combs(xs,i+1):
-        yield c
-        yield c+(xs[i],)
-
-def get_combs(iters):
-    '''used to get all permotations of elements in list'''
-    x = list(combs(iters))
-    lst = sorted(x)
-    res = set()
-    for elem in lst:
-        s = fix_str(elem)
-        if s:
-            res.add(s)
-    return res
-
-def fix_str2(lst):
-    elem = sorted(lst)
-    s = ""
-    q = str(elem)[1:-1]
-    q = q.replace(" ","")
-    q = q.split(",")
-    for el in q:
-        s += str(el)
-    return s
-
-def fix_str(lst):
-    q = sorted(lst)
-    s = ""
-    for el in q:
-        s += str(el)
-    return s
-
-def GetRatesDiff(rates1, rates2):
-    diff = [0]*len(rates1)
-    for idx,elem in enumerate(rates1):
-        diff[idx] = abs(rates1[idx] - rates2[idx])
-    return diff
-
-def GenerateSerialModel(L, capacity=1, alpha=1):
-    '''
-    total L link and L+1 sources, first source transmit to last source and each other source transmit to next source
-    '''
-    from net_objects.Net import NetworkModel
-    from net_objects.Link import Link
-    from net_objects.User import User
-
-    net = NetworkModel(name="serial model (from class)", alpha=alpha)
-    print("building model named '{}'".format(net.name))
-    print("generating {} links and {} users".format(L,L+1))
-    net.users[0] = User(id=0, rate=capacity/2)
-    for l in range(1, L+1):
-        net.links[l] = Link(id=l, capacity=capacity)
-        net.users[l] = User(id=l, rate=capacity/2, num=l)
-    net.users[L+1] = User(id=L+1,rate=0, num=L+1)
-
-    print("connecting links")
-    for l in range(1, L): # connect links
-        net.Connect(net.links[l],net.links[l+1])
-
-    print("connecting users")
-    for u in range(1,L+1): # connect users
-        net.Connect(net.users[u], net.users[u+1])
-        net.Connect(net.users[u], net.links[u])
-        net.links[u].AddLocalUser(net.users[u+1])
-        net.Connect(net.users[0], net.links[u]) # user 0 utilize all links
-    net.Connect(net.users[0], net.users[L+1])
-    net.Connect(net.users[0], net.links[1])
-
-    return net
 
 def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
     '''
@@ -189,6 +111,7 @@ def GenerateSmallWirelessModel(capacity=1, rate=1, alpha=1):
 
     return net
 
+
 def Model(size=6):
     '''generate the wirless networks as described in the article'''
     if size == 6:
@@ -200,6 +123,7 @@ def Model(size=6):
     net_p.MapNeighboors()
 
     return net_p
+
 
 def get_time_remained(time_remained):
     hours = str(time_remained//3600)
@@ -213,6 +137,7 @@ def get_time_remained(time_remained):
         hours = "0"+hours
 
     return hours,minutes,seconds
+
 
 def DoTSOR(size=6, user_id='1'):
     '''
@@ -292,38 +217,6 @@ def DoTSOR(size=6, user_id='1'):
     plt.show()
 
     return avg_payoff
-
-
-
-
-def disp_warn(info,end="\n"):
-    endc = COLOR.ENDC
-    print(f"{COLOR.YELLOW}{info}{endc}",end=end)
-
-def disp_progress(info, end="\n", color="",progress=0):
-    endc = COLOR.ENDC
-    if not color:
-        endc = ""
-    if GLOB.print_progress:
-        passed = "#"*int(progress)
-        gap = " "*(100-int(progress))
-        progress_bar = "["+passed+gap+"]"
-        print ("\033[A                             \033[A")
-        print(f"{color}{info}{' '*(60-len(info))}  {progress_bar}{endc}",end=end)
-
-def disp_func(info, end="\n", color=""):
-    endc = COLOR.ENDC
-    if not color:
-        endc = ""
-    if GLOB.print_func:
-        print(f"{color}{info}{endc}",end=end)
-
-def disp(info,end="\n", color=""):
-    endc = COLOR.ENDC
-    if not color:
-        endc = ""
-    if GLOB.print_info:
-        print(f"{color}{info}{endc}",end=end)
 
 
 if __name__ == "__main__":

@@ -2,8 +2,7 @@
 Alon Goldamnn Jan 14 2022
 network net_objects
 '''
-from TSOR_sim import *
-from GLOB import GLOB, COLOR
+from utils import *
 from datetime import datetime
 
 class Packet(object):
