@@ -3,7 +3,7 @@ Alon Goldamnn Nov 25 2021
 network net_objects
 '''
 from network_sim import *
-from TSOR_sim import *
+# from TSOR_sim import *
 import numpy as np
 from net_objects.Packet import Packet
 

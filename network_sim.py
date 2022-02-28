@@ -8,6 +8,21 @@ from enum import IntFlag
 
 
 '''############################################ functions ############################################'''
+class GLOB(IntFlag):
+    R = 10
+    c = 1
+    N = 6
+    TTL = 6
+    inf = 10**3
+    alpha = 1
+    print_progress = True
+    print_info = False
+    print_func = False
+    L = 5
+    find_short_path = False
+    max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
+    zero_th = 0.001 # x < zero_th -> x == 0
+
 
 class COLOR:
     HEADER = '\033[95m'
@@ -20,9 +35,31 @@ class COLOR:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-def disp(info):
+def disp_progress(info, end="\n", color="",progress=0):
+    endc = COLOR.ENDC
+    if not color:
+        endc = ""
+    if GLOB.print_progress:
+        passed = "#"*int(progress)
+        gap = " "*(100-int(progress))
+        progress_bar = "["+passed+gap+"]"
+        print ("\033[A                             \033[A")
+        print(f"{color}{info}{' '*(80-len(info))} | {progress_bar}{endc}",end=end)
+
+
+def disp_func(info, end="\n", color=""):
+    endc = COLOR.ENDC
+    if not color:
+        endc = ""
+    if GLOB.print_func:
+        print(f"{color}{info}{endc}",end=end)
+
+def disp(info,end="\n", color=""):
+    endc = COLOR.ENDC
+    if not color:
+        endc = ""
     if GLOB.print_info:
-        print(info)
+        print(f"{color}{info}{endc}",end=end)
 
 def disp_color(info,end="\n", color=""):
     endc = COLOR.ENDC
@@ -367,15 +404,6 @@ def Model_BellmanFord(step, threshold, iterations, alpha=1, net=None):
 
     return net_b1,net_b2
 
-
-'''############## Globals ###############'''
-
-class GLOB(IntFlag):
-    inf = 10**3
-    print_info = True
-    L = 5
-    max_plot_rate = 5 # will not save rates higher that that to the net_objects plot
-    zero_th = 0.001 # x < zero_th -> x == 0
 
 
 if __name__ == "__main__":

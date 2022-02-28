@@ -8,7 +8,7 @@ from net_objects.User import User
 from net_objects.Link import Link
 from net_objects.Packet import Packet
 from network_sim import *
-from TSOR_sim import *
+# from TSOR_sim import *
 import numpy as np
 
 class NetworkModel(object):
