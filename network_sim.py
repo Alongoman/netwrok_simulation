@@ -47,7 +47,7 @@ def GenerateSerialModel(L, capacity=1, alpha=1):
     print("generating {} links and {} users".format(L,L+1))
     net.users[0] = User(id=0, rate=capacity/2)
     for l in range(1, L+1):
-        net.links[l] = Link(id=l, capacity=capacity)
+        net.links[l] = Link(id=l, capacity=capacity, print_usage=True)
         net.users[l] = User(id=l, rate=capacity/2, num=l)
     net.users[L+1] = User(id=L+1,rate=0, num=L+1)
 
@@ -94,28 +94,28 @@ def GenerateWebModel(capacity=1, rate=1, alpha=1):
     net.users['e'].Connect(net.users['a'])
     net.users['f'].Connect(net.users['d'])
 
-    net.links['ab'] = Link(id='ab', capacity=capacity)
+    net.links['ab'] = Link(id='ab', capacity=capacity, print_usage=True)
     net.links['ab'].AddLocalUser(net.users['a'])
     net.links['ab'].AddLocalUser(net.users['b'])
-    net.links['ad'] = Link(id='ad', capacity=capacity)
+    net.links['ad'] = Link(id='ad', capacity=capacity, print_usage=True)
     net.links['ad'].AddLocalUser(net.users['a'])
     net.links['ad'].AddLocalUser(net.users['d'])
-    net.links['db'] = Link(id='db', capacity=capacity)
+    net.links['db'] = Link(id='db', capacity=capacity, print_usage=True)
     net.links['db'].AddLocalUser(net.users['d'])
     net.links['db'].AddLocalUser(net.users['b'])
-    net.links['bc'] = Link(id='bc', capacity=capacity)
+    net.links['bc'] = Link(id='bc', capacity=capacity, print_usage=True)
     net.links['bc'].AddLocalUser(net.users['b'])
     net.links['bc'].AddLocalUser(net.users['c'])
-    net.links['de'] = Link(id='de', capacity=capacity)
+    net.links['de'] = Link(id='de', capacity=capacity, print_usage=True)
     net.links['de'].AddLocalUser(net.users['d'])
     net.links['de'].AddLocalUser(net.users['e'])
-    net.links['be'] = Link(id='be', capacity=capacity)
+    net.links['be'] = Link(id='be', capacity=capacity, print_usage=True)
     net.links['be'].AddLocalUser(net.users['b'])
     net.links['be'].AddLocalUser(net.users['e'])
-    net.links['cf'] = Link(id='cf', capacity=capacity)
+    net.links['cf'] = Link(id='cf', capacity=capacity, print_usage=True)
     net.links['cf'].AddLocalUser(net.users['c'])
     net.links['cf'].AddLocalUser(net.users['f'])
-    net.links['ef'] = Link(id='ef', capacity=capacity)
+    net.links['ef'] = Link(id='ef', capacity=capacity, print_usage=True)
     net.links['ef'].AddLocalUser(net.users['e'])
     net.links['ef'].AddLocalUser(net.users['f'])
 
@@ -195,7 +195,7 @@ def GetCostumeLinks():
         id = link[0]
         cap = int(link[1])
         links_local_users[id] = link[2][1:-1].split("|")
-        links[id] = Link(id=id, capacity=cap)
+        links[id] = Link(id=id, capacity=cap, print_usage=True)
         print()
         flag = input("enter new link? [y/n]: ")
 
@@ -344,7 +344,7 @@ def Model_BellmanFord(step, threshold, iterations, alpha=1, net=None):
 
 
 if __name__ == "__main__":
-    step = 0.002
+    step = 0.001
     threshold = 0.000
     iterations = 10*10**3
 

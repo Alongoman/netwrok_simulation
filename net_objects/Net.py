@@ -7,16 +7,18 @@ import random
 from net_objects.User import User
 from net_objects.Link import Link
 from net_objects.Packet import Packet
+from network_sim import *
+from TSOR_sim import *
 import numpy as np
-from utils import *
 
 class NetworkModel(object):
     '''
     model of the network, alpha is the fairness parameter >= 0
     '''
-    def __init__(self, name, alpha=1, links={}, users={}):
+    def __init__(self, name, alpha=1, links={}, users={}, topology=""):
         self.name = name
         self.model_name = ""
+        self.topology = topology
         self.alpha = alpha
         self.links = {}
         self.users = {}
@@ -31,13 +33,13 @@ class NetworkModel(object):
         self.find_short_path = False
 
     def __str__(self):
-        return "network model name: '{}' with total {} links and {} users".format(self.name, len(self.links), len(self.users))
+        return f"network model name: '{self.model_name}' with total {len(self.links)} links and {len(self.users)} users | topology: {self.topology}"
 
     def GetNumberOfUsers(self):
         return len(self.users)
 
     def Show(self):
-        print(self)
+        disp_color(self,color=COLOR.HEADER)
         for link in self.links.values():
             print(link)
             print("link users: ",end="")
@@ -67,11 +69,11 @@ class NetworkModel(object):
         self.neigboors = {}
         for u1 in self.users.values():
             u1.UpdateNeighbors()
-            self.neigboors[u1.id] = u1.neighbors
-            # for u2 in self.users.values():
-            #     link = u1.GetLink(u2)
-            #     if link and u2 != u1:
-            #         self.neigboors[u1.id][u2.id] = u2
+            self.neigboors[u1.id] = {}
+            for u2 in self.users.values():
+                link = u1.GetLink(u2)
+                if link and u2 != u1:
+                    self.neigboors[u1.id][u2.id] = u2
 
     def UpdateLinksLoad(self):
         for link in self.links.values():
@@ -99,10 +101,10 @@ class NetworkModel(object):
             user = random.choice(list(self.users.values()))
         x = user.rate
         disp("user {} rate {}".format(user.id, x))
-        if self.find_short_path:
-            self.model_name = f"Primal-{self.find_short_path}"
-            disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
-            self.UpdatePath(user)
+        # if self.find_short_path:
+        #     self.model_name = f"Primal-{self.find_short_path}"
+        #     disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
+        #     self.UpdatePath(user)
 
         x_t = x + (step*(self.utility_tag(x) - user.GetRouteCost()))
         if x_t < 0:
@@ -140,10 +142,10 @@ class NetworkModel(object):
         while user.dst is None:
             user = random.choice(list(self.users.values()))
         disp("user {} rate {}".format(user.id, user.rate))
-        if self.find_short_path:
-            self.model_name = f"Dual-{self.find_short_path}"
-            disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
-            self.UpdatePath(user)
+        # if self.find_short_path:
+        #     self.model_name = f"Dual-{self.find_short_path}"
+        #     disp(f"finding 'shortest' path first, algorithm: {self.find_short_path}")
+        #     self.UpdatePath(user)
 
         x_t = self.inv_utility_tag(user.GetRouteLagrange())
         if x_t < 0:
@@ -165,7 +167,7 @@ class NetworkModel(object):
 
     def UpdateRatesDual(self, step=0.01, threshold=0.01, iterations=500, iter_thresh=20):
         ''' iterate until grad descent convergence or until timeout'''
-        self.model_name = "Primal"
+        self.model_name = "Dual"
         count = 0
         self.UpdateRates(iter=0)
         self.UpdateLinksLoad()
@@ -253,11 +255,21 @@ class NetworkModel(object):
 
         return node_and_cost
 
+    def UpdateAllPaths(self, type=None):
+        if type is None:
+            type = self.find_short_path
+        disp(f"finding 'shortest' path first, algorithm: {type}")
+        for u_id, user in self.users.items():
+            self.UpdatePath(user=user, type=type)
+
+
     def UpdatePath(self, user, type=None):
         ''' update shortest path - dijkstra / bellman-ford'''
         if type is None:
             type = self.find_short_path
         dst = user.dst
+        if not dst:
+            return
         if type == "Dijkstra":
             node_and_cost = self.UpdateRouteDijkstra(user)
             self.UpdatePathFromTo(user, dst, node_and_cost)
@@ -267,12 +279,17 @@ class NetworkModel(object):
 
     def UpdatePathFromTo(self, user, dst, node_and_cost):
         user.ClearLinks()
+        self.users[user.id].ClearLinks()
         u_id = node_and_cost[dst.id][1]
         link = node_and_cost[dst.id][2]
+        if link is None:
+            return
         user.Connect(self.links[link])
+        self.users[user.id].Connect(self.links[link])
         while u_id != user.id:
             link = node_and_cost[u_id][2]
             user.Connect(self.links[link])
+            self.users[user.id].Connect(self.links[link])
             u_id = node_and_cost[u_id][1]
 
     def utility(self, x):
@@ -284,7 +301,7 @@ class NetworkModel(object):
         if x == 0:
             return GLOB.inf
         try:
-            res = 1/(x**self.alpha)
+            res = 1/(x**self.alpha + 1e-3)
         except OverflowError:
             disp("utility tag too large")
             res = GLOB.inf
@@ -311,16 +328,12 @@ class NetworkModel(object):
         plt.ylabel("Rate")
         plt.xlabel("Iterations")
         plt.title(title)
-        plt.suptitle(self.model_name)
+        plt.suptitle(f"topology: {self.topology} | model: {self.model_name}")
         plt.legend(["user {}".format(id) for u,id in enumerate(self.users)])
         plt.show(block=False)
 
     def TSOR(self, user_id, max_packet=1):
         ''' iterate TSOR from start from user_id until no more packets to route'''
-
-        if max_packet < 1:
-            return 0
-
         for u_id,u in self.users.items():
             u.TSOR0()
 
@@ -343,14 +356,8 @@ class NetworkModel(object):
 
             disp(f"___________________________  done with packet num {i}, payoff={dst.payoff}  _______________________",color=COLOR.BLUE)
             total_payoff += dst.payoff
-            if (total_payoff == 0) and (i > 10):
-                disp_warn("cannot reach destination, skip iteration for efficiency.")
-                break
-
-        # if total_payoff/i > GLOB.R:
-        #     debug = 0
+        if total_payoff/i > GLOB.R:
+            debug = 0
 
 
-
-        return total_payoff/max_packet
-
+        return total_payoff/i

@@ -114,3 +114,11 @@ def disp(info,end="\n", color=""):
         endc = ""
     if GLOB.print_info:
         print(f"{color}{info}{endc}",end=end)
+
+
+def disp_color(info,end="\n", color=""):
+    endc = COLOR.ENDC
+    if not color:
+        endc = ""
+    if GLOB.print_info:
+        print(f"{color}{info}{endc}",end=end)

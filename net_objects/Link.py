@@ -11,7 +11,7 @@ class Link(object):
     '''
     link object with capacity and users that are using it
     '''
-    def __init__(self, id, transmit_prob="uniform", capacity=0, src=None, dst=None, users={}):
+    def __init__(self, id, transmit_prob="uniform", capacity=0, src=None, dst=None, users={}, print_usage=False):
 
         self.id = id
         self.cap = capacity
@@ -28,6 +28,7 @@ class Link(object):
         self.dst = dst
         self.cost = 0 # link cost depend on load
         self.lagrange = 1 # link lagrange multiplier
+        self.print_usage = print_usage
 
     def __str__(self):
         src_id = " "
@@ -36,7 +37,10 @@ class Link(object):
             src_id = self.src.id
         if self.dst is not None:
             dst_id = self.dst.id
-        return f"link {self.id} | topology {src_id} <- -> {dst_id} | transmit prob: {round(100*self.transmit_prob)}% "
+        if self.print_usage:
+            return "link {0} | topology {1} <- {0} -> {2} | capacity: {5} , load: {3}% | total {4} users".format(self.id, src_id, dst_id, round(100*self.load/self.cap,2), len(self.users),self.cap)
+        else:
+            return f"link {self.id} | topology {src_id} <- -> {dst_id} | transmit prob: {round(100*self.transmit_prob)}% "
 
     def Connect(self,obj):
         from net_objects.User import User
